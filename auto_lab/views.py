@@ -1,6 +1,6 @@
 import os
 from time import gmtime, strftime, time, localtime
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone
 import csv
 import json
 
@@ -300,7 +300,7 @@ def form_submit_battery(request):
                                 manufacturer=form['batManufacturer_input'],
                                 model=form['batModel_input'],
                                 sn=form['batSerialNumber_input'],
-                                fab_date=date(datetime.strptime(form['batFabricationDate_input'], '%Y/%m/%d')),
+                                fab_date=datetime.strptime(form['batFabricationDate_input'], '%Y/%m/%d'),
                                 tech=form['batTechnology_input'],
                                 cells_num=int(form['batCellsNumber_input']),
                                 cell_volt_min=int(float(form['batMinCellVoltage_input'])*1000),
