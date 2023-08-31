@@ -72,8 +72,8 @@ jobs:
           context: .
           file: Dockerfile.web_server
           push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # cache-from: type=gha
+          # cache-to: type=gha,mode=max
           # tags: ${{ env.REGISTRY }}/${{github.repository}}/${{ env.IMAGE_NAME }}:web
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:web
           labels: ${{ steps.meta.outputs.labels }}
