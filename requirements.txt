@@ -8,3 +8,4 @@ mysql-connector-python==8.0.26
 protobuf==3.19.1
 soupsieve==2.3.1
 sqlparse==0.4.2
+kaleido==0.2.1
