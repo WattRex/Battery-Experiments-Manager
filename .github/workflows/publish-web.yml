@@ -74,5 +74,5 @@ jobs:
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: ghcr.io/web-wattrex-experiments-manager:web wattrex-experiments-manager #${{ steps.meta.outputs.tags }}
+          tags: ${{ env.REGISTRY }}/${{github.repository}}/${{ env.IMAGE_NAME }}:web
           labels: ${{ steps.meta.outputs.labels }}
