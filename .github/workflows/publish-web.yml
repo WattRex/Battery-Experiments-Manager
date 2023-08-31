@@ -62,7 +62,7 @@ jobs:
         shell: bash
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@@v4.1.1
+        uses: docker/build-push-action@v4.1.1
         with:
           context: .
           file: Dockerfile.web_server
