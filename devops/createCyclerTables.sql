@@ -108,11 +108,10 @@ create table if not exists LinkConfiguration
 create table if not exists ComputationalUnit
 (
     CUID            mediumint       unsigned    not null    auto_increment,
-    Name            varchar(50)                 not null,
+    HostName        varchar(50)                 not null,
     IP              varchar(20)                 not null,
     Port            smallint        unsigned    not null,
-    User            varchar(20)                 not null,
-    Pass            varchar(100)                not null,
+    User            varchar(30)                 not null,
     LastConnection  datetime                    not null,
     Available       enum ('ON', 'OFF')          not null,
 
@@ -363,7 +362,7 @@ create table if not exists ExtendedMeasures
 );
 
 INSERT INTO CompatibleDevices(Name, Manufacturer, Model, DeviceType, MinSWVersion, VoltMin, VoltMax, CurrMin, CurrMax) VALUES ('Virtual', 'Undefined', 'Undefined', 'BiSource', 0, 0, 9999999, -999999, 999999);
-INSERT INTO ComputationalUnit(Name, IP, Port, User, Pass, LastConnection, Available) VALUES ('Virtual', '127.0.0.1', 6969, 'basic_user', 'basic_user', NOW(), 'ON');
+INSERT INTO ComputationalUnit(HostName, IP, Port, User, LastConnection, Available) VALUES ('Virtual', '127.0.0.1', 6969, 'basic_user', NOW(), 'ON');
 INSERT INTO CyclerStation(CUID, Name, Location, RegisterDate, Deprecated) VALUES (1, 'Virtual', 'Undefined', NOW(), 0);
 INSERT INTO DetectedDevices(CUID, CompDevID, SN, LinkName, ConnStatus) VALUES (1, 1, 'Virtual', 'Virtual', 'CONNECTED');
 INSERT INTO UsedDevices(CSID, DevID) VALUES (1, 1);
