@@ -13,12 +13,12 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
                                 
 from auto_lab.models import Alarm, Battery, Compatibledevices, Computationalunit, \
-                                Cyclestation, Experiment, Extendedmeasures, Genericmeasures, \
-                                Instructions, Leadacid, Lithium, Measuresdeclaration, Profile, \
-                                Redoxelectrolyte, Redoxstack, DeviceStatus, Useddevices
+                                Cyclerstation, Experiment, Extendedmeasures, Genericmeasures, \
+                                Instructions, Leadacid, Lithium, Profile, \
+                                Redoxelectrolyte, Redoxstack, Devicestatus, Useddevices
 from auto_lab.models_types import Technology_e, Chemistry_Lithium_e, Chemistry_LeadAcid_e, BipolarType_e, \
-                         MembraneType_e, ElectrolyteType_e, DeviceType_e, Available_e, Status_Experiment_e, \
-                         Status_DeviceStatus_e, Mode_e, LimitType_e
+                         MembraneType_e, ElectrolyteType_e, DeviceType_e, Available_e, ExperimentStatus_e, \
+                         DeviceStatus_e, Mode_e, LimitType_e
 from auto_lab.validator import ques
 from auto_lab.analyzer import analyzer, stringToInstructions
 
@@ -53,7 +53,7 @@ def monitor(request, return_render = True):
 def monitor_selected(request, cs_id_selected): #TODO: Hacer que si un equipo está desactivado (status != ONLINE) se pueda seguir accediendo a sus experimentos ya que ahora no puedes hacer click en el en la vista de monitor.html
     # print(monitor(request, render = False))
     cycle_stations_on = monitor(request, return_render = False)['cycle_stations_on']
-    cycle_station_selected = Cyclestation.objects.get(cs_id=cs_id_selected)
+    cycle_station_selected = Cyclerstation.objects.get(cs_id=cs_id_selected)
     experiments_selected = Experiment.objects.filter(cs_id=cs_id_selected).filter(status__in=['RUNNING', 'PAUSE']).order_by('-exp_id').first()
     profile_selected = Profile.objects.get(prof_id=experiments_selected.prof_id.prof_id)
 
@@ -88,7 +88,7 @@ def form_submit_experiment(request):
                                     description=form['expDescription_input'],
                                     date_creation=strftime("%Y-%m-%d %H:%M:%S", gmtime()),
                                     status='QUEUED',
-                                    cs_id=Cyclestation.objects.get(cs_id=form['expEquipment_input']),
+                                    cs_id=Cyclerstation.objects.get(cs_id=form['expEquipment_input']),
                                     bat_id=Battery.objects.get(bat_id=form['expBattery_input']),
                                   )
         
@@ -213,7 +213,7 @@ def form_import_experiment(request):
                                     date_begin=strftime("%Y-%m-%d %H:%M:%S", localtime()),
                                     date_finish=strftime("%Y-%m-%d %H:%M:%S", localtime()),
                                     status='FINISHED',
-                                    cs_id=Cyclestation.objects.get(name = "Virtual", cs_id = 1),
+                                    cs_id=Cyclerstation.objects.get(name = "Virtual", cs_id = 1),
                                     bat_id=Battery.objects.get(bat_id=form['expBattery_input']),
                                   )
         
@@ -402,7 +402,7 @@ def experiments(request):
         battery_list.append(battery)
 
     cycle_station_list = []
-    for station in Cyclestation.objects.all():
+    for station in Cyclerstation.objects.all():
         cycle_station_list.append(station)
     # equipmentsName = Equipment.objects.all().values_list('name', flat=True)
 
@@ -450,9 +450,9 @@ def applyExperimentsFilters(request):
     
     cycle_stations = []
     if len(filters['cycle_station']) > 0:
-        cycle_stations = Cyclestation.objects.filter(cs_id__in=filters['cycle_station'])
+        cycle_stations = Cyclerstation.objects.filter(cs_id__in=filters['cycle_station'])
     else:
-        cycle_stations = Cyclestation.objects.all()
+        cycle_stations = Cyclerstation.objects.all()
 
     profiles = []
     if len(filters['profile']) > 0:
@@ -536,7 +536,7 @@ def translateMeasuresNames(request):
 
 def add_experiment(request):
     batteries = Battery.objects.all()
-    cycler_stations = Cyclestation.objects.all()
+    cycler_stations = Cyclerstation.objects.all()
     redox_stack = {}
     redox_stack['bipolar_type'] = BipolarType_e.values
     redox_stack['membrane_type'] = MembraneType_e.values
