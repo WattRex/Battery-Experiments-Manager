@@ -130,6 +130,7 @@ create table if not exists CyclerStation
     Name            varchar(30)                 not null,
     Location        varchar(30)                 not null,
     RegisterDate    datetime                    not null,
+    Parent          mediumint       unsigned        null,
     Deprecated      boolean                     not null,
     
     constraint CycleStation_pk_1
