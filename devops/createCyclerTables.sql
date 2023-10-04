@@ -118,7 +118,7 @@ create table if not exists ComputationalUnit
     constraint ComputationalUnit_pk_1
         primary key (CUID),
     constraint ComputationalUnit_unq_1
-        unique (Name, IP, Port)
+        unique (HostName, IP, Port)
 );
 
 
@@ -176,15 +176,15 @@ create table if not exists UsedDevices
 );
 
 
--- Table UsedMeasures --------------------------
+-- Table AvailableMeasures --------------------------
 create table if not exists AvailableMeasures
 (
-    MeasType        mediumint       unsigned    not null,
+    MeasType        mediumint       unsigned    not null    auto_increment,
     CompDevID       mediumint       unsigned    not null,
-    MeasName        varchar(20)     unsigned    not null,
+    MeasName        varchar(20)                 not null,
 
     constraint AvailableMeasures_pk_1
-        primary key (MeasID),
+        primary key (MeasType),
     constraint AvailableMeasures_fk_1
         foreign key (CompDevID) references CompatibleDevices (CompDevID)
 );
@@ -193,14 +193,14 @@ create table if not exists AvailableMeasures
 -- Table UsedMeasures --------------------------
 create table if not exists UsedMeasures
 (
-    MeasID          mediumint       unsigned    not null    auto_increment,
+    UsedMeasID      mediumint       unsigned    not null    auto_increment,
     CSID            mediumint       unsigned    not null,
     DevID           mediumint       unsigned    not null,
     MeasType        mediumint       unsigned    not null,
-    CustomName      varchar(30)     unsigned    null,
+    CustomName      varchar(30)                 null,
 
     constraint UsedMeasures_pk_1
-        primary key (MeasID),
+        primary key (UsedMeasID),
     constraint UsedMeasures_fk_1
         foreign key (CSID) references CyclerStation (CSID),
     constraint UsedMeasures_fk_2
@@ -349,17 +349,17 @@ create table if not exists ExtendedMeasures
 (
     ExpID           mediumint       unsigned    not null,
     MeasID          int             unsigned    not null,
-    MeasType        mediumint       unsigned    not null,
+    UsedMeasID      mediumint       unsigned    not null,
     Value           mediumint                   not null,
 
     constraint ExtendedMeasures_pk_1 
-        primary key (ExpID, MeasID, MeasType),
+        primary key (ExpID, MeasID, UsedMeasID),
     constraint ExtendedMeasures_fk_1
         foreign key (ExpID) references GenericMeasures (ExpID),
     constraint ExtendedMeasures_fk_2
         foreign key (MeasID) references GenericMeasures (MeasID),
     constraint ExtendedMeasures_fk_3
-        foreign key (MeasType) references UsedMeasures (MeasType)
+        foreign key (UsedMeasID) references UsedMeasures (UsedMeasID)
 );
 
 INSERT INTO CompatibleDevices(Name, Manufacturer, Model, DeviceType, MinSWVersion, VoltMin, VoltMax, CurrMin, CurrMax) VALUES ('Virtual', 'Undefined', 'Undefined', 'BiSource', 0, 0, 9999999, -999999, 999999);
