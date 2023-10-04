@@ -1,4 +1,12 @@
 FROM python:3.9
+
+LABEL   org.opencontainers.image.authors="javiersanzmoline@gmail.com" \
+        org.opencontainers.image.title="Battery-Experiments-Manager" \
+        org.opencontainers.image.description="A web service and a database to review and manage battery experiments" \
+        org.opencontainers.image.url="https://github.com/WattRex/Battery-Experiments-Manager" \
+        org.opencontainers.image.source="https://github.com/WattRex/Battery-Experiments-Manager" \
+        org.opencontainers.image.licenses="GPL-3.0"
+
 ENV PYTHONUNBUFFERED 1
 RUN mkdir /code
 WORKDIR /code
