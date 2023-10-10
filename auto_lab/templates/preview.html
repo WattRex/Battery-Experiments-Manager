@@ -614,11 +614,11 @@ td {
                                             <th>Cycle Station Location</th>
                                             <td>{{ cycler_station.location }}</td>
                                         </tr>
-                                        {% for device in comp_devices %}
+                                        {% for device in detected_used_devices %}
                                         <tr>
                                             <th>Used device</th>
                                             <td>
-                                                {{ device.name }} - {{ device.manufacturer }}
+                                                {{ device.device_type }} - {{ device.name }}
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -648,7 +648,7 @@ td {
                                         <tr>
                                             <!-- <th>Used device</th> -->
                                             <td>
-                                                {{ meas.meas_name }}
+                                                {{ meas }}
                                             </td>
                                         </tr>
                                         {% endfor %}

@@ -74,6 +74,12 @@ class Mode_e(models.TextChoices):
     CV_MODE = 'CV_MODE'
     CP_MODE = 'CP_MODE'
 
+class Mode_Validator_e(models.TextChoices):
+    WAIT    = 'WAIT'
+    CC_MODE = 'CC'
+    CV_MODE = 'CV'
+    CP_MODE = 'CP'
+
 class LimitType_e(models.TextChoices):
     TIME    = 'TIME'
     VOLTAGE = 'VOLTAGE'

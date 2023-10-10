@@ -153,6 +153,8 @@
             const EXP_ID = {{ experiment_selected.exp_id }};
             var time_window_select = document.getElementById("time_window");
             var time_interval = window.setInterval(updateGraph, 5000);
+            var used_meas_ids_and_names = {{ used_meas_ids_and_names | safe}}
+            // console.log(used_meas_ids_and_names);
 
             // Add event listener to time window select to update the graph depending on the selected time window value
             time_window.addEventListener("change", function() {
@@ -172,6 +174,7 @@
                     success:  function(response){
                         new_meas = JSON.parse(response)['newMeas']
                         new_meas_ids = JSON.parse(response)['newMeasIds']
+                        console.log(new_meas_ids);
                     },
                 });
                 for (let trace of graph.data) {
@@ -187,7 +190,8 @@
                         // meas_index = 1;
                     }
                     else {
-                        number_meas = meas_numeric_list[meas_names_list.indexOf(trace.name)];
+                        // number_meas = meas_numeric_list[meas_names_list.indexOf(trace.name)];
+                        number_meas = trace.text.substring(3);
                         trace.y = new_meas[number_meas];
                     }
                 }
@@ -205,23 +209,44 @@
             var meas_numeric_list = [];
             for (let trace of graph.data) {
                 meas_names_list.push(trace.name);
+                if (trace.text) {
+                    meas_numeric_list.push(trace.text.substring(3));
+                } else {
+                    meas_numeric_list.push(-1);
+                }
             }
-            // console.log(meas_names_list);
+            console.log(meas_names_list);
+            console.log(meas_numeric_list);
 
-            // Initial ajax call to get the measures names and their numeric value
-            $.ajax({
-                async: false,
-                type: "POST",
-                url: "{% url 'translate-measures-names' %}",   
-                // contentType: "application/json; charset=utf-8",
-                data: { csrfmiddlewaretoken: '{{ csrf_token }}',
-                        measures_names: JSON.stringify(meas_names_list),
-                    },
-                success:  function(response){
-                    meas_numeric_list = JSON.parse(response)['meas_numeric_list']
-                    // console.log(meas_numeric_list);
-                },
-            });
+            // // Initial ajax call to get the measures names and their numeric value
+            // $.ajax({
+            //     async: false,
+            //     type: "POST",
+            //     url: "{% url 'translate-measures-names' %}",   
+            //     // contentType: "application/json; charset=utf-8",
+            //     data: { csrfmiddlewaretoken: '{{ csrf_token }}',
+            //             measures_names: JSON.stringify(meas_names_list),
+            //             exp_id: EXP_ID,
+            //         },
+            //     success:  function(response){
+            //         meas_numeric_list = JSON.parse(response)['meas_numeric_list']
+            //         // console.log(meas_numeric_list);
+            //     },
+            // });
+            // for (let meas_name of meas_names_list) {
+            //     let generic_meas_names_list = ['Voltage', 'voltage', 'Current', 'current'];
+            //     if (generic_meas_names_list.includes(meas_name)) {
+            //         meas_numeric_list.push(-1);
+            //     }
+            //     else {
+            //         meas_numeric_list.push(used_meas_ids_and_names[meas_name]);
+            //         console.log();
+            //         for (let used_meas_id of Object.keys(used_meas_ids_and_names)) {
+            //             console.log(used_meas_ids_and_names[used_meas_id])
+            //         }
+            //     }
+            // }
+
 
             function updateGraph() {
                 let new_meas = null;
@@ -229,7 +254,8 @@
                 let actual_instr = null;
                 // console.log(graph.data);
                 let last_meas_id_on_graph = graph.data[0].x[graph.data[0].x.length - 1];
-                // console.log(last_meas_id_on_graph);
+                console.log(graph.data[0]);
+                console.log(last_meas_id_on_graph);
                 $.ajax({
                     async: false,
                     type: "POST",
@@ -252,31 +278,33 @@
                 if (actual_instr != null) {
                     document.getElementById("actual-instr").innerHTML = actual_instr;
                 }
-
-                for (let trace of graph.data) {
-                    trace.x = trace.x.concat(new_meas_ids);
-                    // console.log(trace.name);
-                    let meas_index = null;
-                    if (trace.name == 'Voltage') {
-                        trace.y = trace.y.concat(new_meas['Voltage']);
-                        // meas_index = 0;
-                    } 
-                    else if (trace.name == 'Current') {
-                        trace.y = trace.y.concat(new_meas['Current']);
-                        // meas_index = 1;
+                if (new_meas_ids != null) {
+                    for (let trace of graph.data) {
+                        trace.x = trace.x.concat(new_meas_ids);
+                        // console.log(trace.name);
+                        let meas_index = null;
+                        if (trace.name == 'Voltage') {
+                            trace.y = trace.y.concat(new_meas['Voltage']);
+                            // meas_index = 0;
+                        } 
+                        else if (trace.name == 'Current') {
+                            trace.y = trace.y.concat(new_meas['Current']);
+                            // meas_index = 1;
+                        }
+                        else {
+                            // number_meas = meas_numeric_list[meas_names_list.indexOf(trace.name)];
+                            number_meas = trace.text.substring(3);
+                            trace.y = trace.y.concat(new_meas[number_meas]);
+                        }
                     }
-                    else {
-                        number_meas = meas_numeric_list[meas_names_list.indexOf(trace.name)];
-                        trace.y = trace.y.concat(new_meas[number_meas]);
+                    // console.log(graph.layout.xaxis.range);
+                    if (last_meas_id_on_graph > graph.layout.xaxis.range[0] && last_meas_id_on_graph < graph.layout.xaxis.range[1]){
+                        // console.log('inside_range');
+                        graph.layout.xaxis.range[0] += new_meas_ids.length;
+                        graph.layout.xaxis.range[1] += new_meas_ids.length;
                     }
+                    Plotly.update(graph.id, graph.data, graph.layout);
                 }
-                // console.log(graph.layout.xaxis.range);
-                if (last_meas_id_on_graph > graph.layout.xaxis.range[0] && last_meas_id_on_graph < graph.layout.xaxis.range[1]){
-                    // console.log('inside_range');
-                    graph.layout.xaxis.range[0] += new_meas_ids.length;
-                    graph.layout.xaxis.range[1] += new_meas_ids.length;
-                }
-                Plotly.update(graph.id, graph.data, graph.layout);
             }
 
             function KeyPress(e) {

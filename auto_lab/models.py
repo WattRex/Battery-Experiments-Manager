@@ -141,13 +141,13 @@ class Detecteddevices(models.Model):
 
 
 class Useddevices(models.Model):
-    csid = models.ForeignKey(Cyclerstation, models.DO_NOTHING, db_column='CSID')  # Field name made lowercase.
-    devid = models.ForeignKey(Detecteddevices, models.DO_NOTHING, db_column='DevID')  # Field name made lowercase.
+    cs_id = models.ForeignKey(Cyclerstation, models.DO_NOTHING, db_column='CSID')  # Field name made lowercase.
+    dev_id = models.ForeignKey(Detecteddevices, models.DO_NOTHING, db_column='DevID', primary_key=True)  # Field name made lowercase.
 
     class Meta:
         managed = False
         db_table = 'UsedDevices'
-        unique_together = (('csid', 'devid'),)
+        unique_together = (('cs_id', 'dev_id'),)
 
 
 class Availablemeasures(models.Model):

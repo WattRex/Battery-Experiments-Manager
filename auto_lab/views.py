@@ -15,7 +15,8 @@ from django.db import connection
 from auto_lab.models import Alarm, Battery, Compatibledevices, Computationalunit, \
                                 Cyclerstation, Experiment, Extendedmeasures, Genericmeasures, \
                                 Instructions, Leadacid, Lithium, Profile, \
-                                Redoxelectrolyte, Redoxstack, Devicestatus, Useddevices
+                                Redoxelectrolyte, Redoxstack, Devicestatus, Useddevices, \
+                                Usedmeasures, Availablemeasures
 from auto_lab.models_types import Technology_e, Chemistry_Lithium_e, Chemistry_LeadAcid_e, BipolarType_e, \
                          MembraneType_e, ElectrolyteType_e, DeviceType_e, Available_e, ExperimentStatus_e, \
                          DeviceStatus_e, Mode_e, LimitType_e
@@ -69,10 +70,16 @@ def monitor_selected(request, cs_id_selected): #TODO: Hacer que si un equipo est
         'instr': f'{last_meas_instr.instr_id.mode}, {last_meas_instr.instr_id.set_point/1000}, {last_meas_instr.instr_id.limit_type}, {last_meas_instr.instr_id.limit_point/1000}' if last_meas_instr is not None else None,
     }
     if experiments_selected is not None:
+        different_extended_measures = Extendedmeasures.objects.filter(exp_id=experiments_selected).values_list('used_meas_id', flat=True).distinct()
+        different_extended_measures = set(different_extended_measures)
+        extended_measures_names = {}
+        for ext_meas in different_extended_measures:
+            extended_measures_names[ext_meas] = Usedmeasures.objects.get(used_meas_id=ext_meas).custom_name if Usedmeasures.objects.get(used_meas_id=ext_meas).custom_name != None else Usedmeasures.objects.get(used_meas_id=ext_meas).meas_type.meas_name
         context = {
             'cycle_stations_on': cycle_stations_on,
             'experiment_selected': experiments_selected,
             'live_graph': graphLive(experiments_selected.exp_id, time_window=60),
+            'used_meas_ids_and_names': json.dumps(extended_measures_names),
             'profile': profile_instr,
         }
         return render(request, 'monitor.html', context)
@@ -355,14 +362,14 @@ def validateProfile(request):
         used_devices = Useddevices.objects.filter(cs_id=cycler_station_id)
         volt_max, volt_min, curr_max, curr_min = battery.volt_max, battery.volt_min, battery.curr_max, battery.curr_min
         for device in used_devices:
-            if device.comp_dev_id.volt_min > volt_min:
-                volt_min = device.comp_dev_id.volt_min
-            if device.comp_dev_id.volt_max < volt_max:
-                volt_max = device.comp_dev_id.volt_max
-            if device.comp_dev_id.curr_min > curr_min:
-                curr_min = device.comp_dev_id.curr_min
-            if device.comp_dev_id.curr_max < curr_max:
-                curr_max = device.comp_dev_id.curr_max
+            if device.dev_id.comp_dev_id.volt_min > volt_min:
+                volt_min = device.dev_id.comp_dev_id.volt_min
+            if device.dev_id.comp_dev_id.volt_max < volt_max:
+                volt_max = device.dev_id.comp_dev_id.volt_max
+            if device.dev_id.comp_dev_id.curr_min > curr_min:
+                curr_min = device.dev_id.comp_dev_id.curr_min
+            if device.dev_id.comp_dev_id.curr_max < curr_max:
+                curr_max = device.dev_id.comp_dev_id.curr_max
         if tmp_analyzer.curr_max > curr_max or tmp_analyzer.curr_min < curr_min:
             error_msg = 'Current out of range'
             is_valid = False
@@ -487,8 +494,8 @@ def applyExperimentsFilters(request):
 
 def getNewMeasures(request):
     post_dict = dict(request.POST)
-    
-    last_meas_id = json.loads(post_dict['last_meas_id'][0])
+    # print(post_dict['last_meas_id'])
+    last_meas_id = post_dict['last_meas_id'][0]
     # print(last_meas_id)
     meas_numeric_list = json.loads(post_dict['meas_numeric_list'][0])
     # print(meas_numeric_list)
@@ -497,7 +504,6 @@ def getNewMeasures(request):
 
     new_meas = {}
     new_meas_ids = list(new_generic_measures.values_list('meas_id', flat=True))
-    # print(new_meas_ids)
     new_meas['Voltage'] = []
     new_meas['Current'] = []
     for meas_id in new_generic_measures:
@@ -505,13 +511,16 @@ def getNewMeasures(request):
         new_meas['Current'].append(meas_id.current/1000.0)
     for ext_meas_numeric in meas_numeric_list:
         if ext_meas_numeric != -1:
-            temp_ext_meas = new_extended_measures.filter(meas_type=ext_meas_numeric).values_list('value', flat=True)
+            temp_ext_meas = new_extended_measures.filter(used_meas_id=ext_meas_numeric).values_list('value', flat=True)
             new_meas[ext_meas_numeric] = [meas/1000.0 for meas in list(temp_ext_meas)]
-
+    if new_generic_measures.first() is not None:
+        actual_instr_id = list(new_generic_measures.values_list('instr_id', flat=True))[-1]
+    else:
+        actual_instr_id = None
     response = {
         'newMeas': new_meas,
         'newMeasIds': new_meas_ids,
-        'actualInstruction': new_generic_measures.first().instr_id.instr_id if new_generic_measures.first() is not None else None,
+        'actualInstruction': actual_instr_id,
     }
     return HttpResponse(json.dumps(response))
 
@@ -520,6 +529,12 @@ def translateMeasuresNames(request):
     post_dict = dict(request.POST)
     
     meas_names_list = json.loads(post_dict['measures_names'][0])
+    exp_id = post_dict['exp_id']
+    selected_experiment = Experiment.objects.get(exp_id=exp_id)
+    used_measures = Usedmeasures.objects.filter(cs_id=selected_experiment.cs_id)
+    used_measures_names = []
+    for used_measure in used_measures:
+        used_measures_names.append(used_measure.custom_name)
     # print(meas_names_list)
     meas_numeric_list = []
     for name in meas_names_list:
@@ -600,14 +615,14 @@ def getProfiles(request):
     volt_max, volt_min, curr_max, curr_min = battery.volt_max, battery.volt_min, battery.curr_max, battery.curr_min
 
     for device in used_devices:
-        if device.comp_dev_id.volt_min > volt_min:
-            volt_min = device.comp_dev_id.volt_min
-        if device.comp_dev_id.volt_max < volt_max:
-            volt_max = device.comp_dev_id.volt_max
-        if device.comp_dev_id.curr_min > curr_min:
-            curr_min = device.comp_dev_id.curr_min
-        if device.comp_dev_id.curr_max < curr_max:
-            curr_max = device.comp_dev_id.curr_max
+        if device.dev_id.comp_dev_id.volt_min > volt_min:
+            volt_min = device.dev.comp_dev_id.volt_min
+        if device.dev_id.comp_dev_id.volt_max < volt_max:
+            volt_max = device.dev_id.comp_dev_id.volt_max
+        if device.dev_id.comp_dev_id.curr_min > curr_min:
+            curr_min = device.dev_id.comp_dev_id.curr_min
+        if device.dev_id.comp_dev_id.curr_max < curr_max:
+            curr_max = device.dev_id.comp_dev_id.curr_max
     # print(f"\nvolt_max: {volt_max}\nvolt_min: {volt_min}\ncurr_max: {curr_max}\ncurr_min: {curr_min}\n")
     profiles = Profile.objects.filter(volt_max__lte=volt_max).filter(volt_min__gte=volt_min).filter(curr_max__lte=curr_max).filter(curr_min__gte=curr_min)
     profiles_extra = Profile.objects.filter(volt_max=None).filter(volt_min=None).filter(curr_max__lte=curr_max).filter(curr_min__gte=curr_min)
@@ -642,10 +657,21 @@ def loadReportTemplate(request, exp_id_selected, override_base = None, graph_fon
         experiment_duration = datetime.now(timezone.utc) - experiment_selected.date_begin
     else:
         experiment_duration = None
-    used_equipments = Useddevices.objects.filter(cs_id=experiment_selected.cs_id)
-    comp_devices = Compatibledevices.objects.filter(comp_dev_id__in=used_equipments.values('comp_dev_id'))
-    recorded_measures = set(Extendedmeasures.objects.filter(exp_id=exp_id_selected).values_list('meas_type', flat=True))
-    measures_names = Measuresdeclaration.objects.filter(meas_type__in=recorded_measures)
+    # used_equipments = Useddevices.objects.filter(cs_id=experiment_selected.cs_id)
+    used_devices = Useddevices.objects.filter(cs_id=experiment_selected.cs_id)
+    detected_used_devices = [device.dev_id for device in used_devices]
+    for device in detected_used_devices:
+        device.device_type = device.comp_dev_id.device_type
+        device.name = device.comp_dev_id.name
+    # comp_devices = Compatibledevices.objects.filter(comp_dev_id__in=used_equipments.values('comp_dev_id'))
+    recorded_measures = set(Extendedmeasures.objects.filter(exp_id=exp_id_selected).values_list('used_meas_id', flat=True))
+    used_meas_ids = Usedmeasures.objects.filter(cs_id=experiment_selected.cs_id).filter(used_meas_id__in=recorded_measures)
+    measures_names = []
+    for meas in used_meas_ids:
+        if meas.custom_name == None:
+            measures_names.append(meas.meas_type.meas_name)
+        else:
+            measures_names.append(meas.custom_name)
     triggered_alarms = Alarm.objects.filter(exp_id=exp_id_selected)
     profile_used = Profile.objects.get(prof_id=experiment_selected.prof_id.prof_id)
     instructions = Instructions.objects.filter(prof_id=profile_used).order_by('instr_id')
@@ -654,8 +680,9 @@ def loadReportTemplate(request, exp_id_selected, override_base = None, graph_fon
         'experiment': experiment_selected,
         'battery': experiment_selected.bat_id,
         'cycler_station': experiment_selected.cs_id,
-        'used_equipments': used_equipments,
-        'comp_devices': comp_devices,
+        # 'used_equipments': used_equipments,
+        # 'comp_devices': comp_devices,
+        'detected_used_devices': detected_used_devices,
         'measures_names': measures_names,
         'override_base': override_base,
         'graph': graphPreview(exp_id_selected, graph_font_family=graph_font_family),
@@ -686,7 +713,7 @@ def getNewGraph(request):
         new_meas['Current'].append(meas_id.current/1000.0)
     for ext_meas_numeric in meas_numeric_list:
         if ext_meas_numeric != -1:
-            temp_ext_meas = new_extended_measures.filter(meas_type=ext_meas_numeric).values_list('value', flat=True)
+            temp_ext_meas = new_extended_measures.filter(used_meas_id=ext_meas_numeric).values_list('value', flat=True)
             new_meas[ext_meas_numeric] = [meas/1000.0 for meas in list(temp_ext_meas)]
 
     response = {
@@ -714,13 +741,12 @@ def graphLive(exp_id_selected, time_window=300, only_data=False):
             y_measures['current'].append(meas.current/1000.0)
 
         extended_measures = Extendedmeasures.objects.filter(exp_id=exp_id_selected).order_by('meas_id').filter(meas_id__gte=max(0, last_meas_id-time_window))
-        different_extended_measures = extended_measures.values_list('meas_type', flat=True).distinct()
+        different_extended_measures = extended_measures.values_list('used_meas_id', flat=True).distinct()
         different_extended_measures = set(different_extended_measures)
         extended_measures_names = {}
         for ext_meas in different_extended_measures:
-            extended_measures_names[ext_meas] = Measuresdeclaration.objects.get(meas_type=ext_meas).meas_name
-            y_measures[extended_measures_names[ext_meas]] = [value/1000.0 for value in extended_measures.filter(meas_type=ext_meas).values_list('value', flat=True)]
-
+            extended_measures_names[ext_meas] = Usedmeasures.objects.get(used_meas_id=ext_meas).custom_name if Usedmeasures.objects.get(used_meas_id=ext_meas).custom_name != None else Usedmeasures.objects.get(used_meas_id=ext_meas).meas_type.meas_name
+            y_measures[extended_measures_names[ext_meas]] = [value/1000.0 for value in extended_measures.filter(used_meas_id=ext_meas).values_list('value', flat=True)]
         fig = make_subplots(specs=[[{"secondary_y": True}]])
 
         fig.add_trace(go.Scatter(
@@ -748,8 +774,9 @@ def graphLive(exp_id_selected, time_window=300, only_data=False):
                 mode = 'lines+markers',
                 x = x_meas_id,
                 y = y_measures[extended_measures_names[ext_meas]],
-                name = str(extended_measures_names[ext_meas]).capitalize(),
+                name = str(extended_measures_names[ext_meas]),#.capitalize(),
                 marker=dict(size=5, symbol='pentagon'),  # Personalizar los marcadores
+                text = f"ID: {ext_meas}"
                 ),
                 secondary_y = True
             )
@@ -857,17 +884,17 @@ def graphPreview(exp_id_selected, extended_measures_to_graph : bool = True, save
 
     if extended_measures_to_graph:
         extended_measures = Extendedmeasures.objects.filter(exp_id=exp_id_selected).order_by('meas_id')
-        different_extended_measures = extended_measures.values_list('meas_type', flat=True).distinct()
+        different_extended_measures = extended_measures.values_list('used_meas_id', flat=True).distinct()
         different_extended_measures = set(different_extended_measures)
 
         extended_measures_names = {}
         for diff_ext_meas in different_extended_measures:
-            extended_measure_name = Measuresdeclaration.objects.get(meas_type=diff_ext_meas).meas_name
+            extended_measure_name = Usedmeasures.objects.get(used_meas_id=diff_ext_meas).custom_name if Usedmeasures.objects.get(used_meas_id=diff_ext_meas).custom_name != None else Usedmeasures.objects.get(used_meas_id=diff_ext_meas).meas_type.meas_name
             extended_measures_names[diff_ext_meas] = extended_measure_name
             query_extended_measures = \
             f'''
                 SELECT block, MIN(MeasID) AS first_block_row, AVG(Value/1000) AS avg_meas
-                FROM (SELECT ExtendedMeasures.MeasID AS MeasID, NTILE({MAX_NUMBER_OF_POINTS}) OVER (ORDER BY MeasID) AS Block, ExtendedMeasures.Value AS Value FROM ExtendedMeasures WHERE ExpID={exp_id_selected} AND MeasType={diff_ext_meas}) AS Chunks
+                FROM (SELECT ExtendedMeasures.MeasID AS MeasID, NTILE({MAX_NUMBER_OF_POINTS}) OVER (ORDER BY MeasID) AS Block, ExtendedMeasures.Value AS Value FROM ExtendedMeasures WHERE ExpID={exp_id_selected} AND UsedMeasID={diff_ext_meas}) AS Chunks
                 GROUP BY Block
             '''
             results = None
@@ -909,7 +936,7 @@ def graphPreview(exp_id_selected, extended_measures_to_graph : bool = True, save
                 mode = 'lines+markers',
                 x = x_meas_id,
                 y = y_measures[extended_measures_names[ext_meas]],
-                name = str(extended_measures_names[ext_meas]).capitalize(),
+                name = str(extended_measures_names[ext_meas]),#.capitalize(),
                 marker=dict(size=5, symbol='pentagon'),  # Personalizar los marcadores
                 ),
                 secondary_y = True
@@ -1011,13 +1038,14 @@ def getCsv(request, exp_id_selected):
     writer = csv.writer(response)
     
     generic_measures = Genericmeasures.objects.filter(exp_id=exp_id_selected).order_by('meas_id')
-    differnt_extended_measures = Extendedmeasures.objects.filter(exp_id=exp_id_selected).values_list('meas_type', flat=True).distinct()
+    differnt_extended_measures = Extendedmeasures.objects.filter(exp_id=exp_id_selected).values_list('used_meas_id', flat=True).distinct()
     diff_ext_meas_list = []
     for diff_meas in differnt_extended_measures:
         diff_ext_meas_list.append(diff_meas)
     diff_ext_meas_names = []
     for diff_meas in diff_ext_meas_list:
-        diff_ext_meas_names.append(Measuresdeclaration.objects.get(meas_type=diff_meas).meas_name)
+        diff_ext_meas_names.append(Usedmeasures.objects.get(used_meas_id=diff_meas).custom_name if Usedmeasures.objects.get(used_meas_id=diff_meas).custom_name != None else Usedmeasures.objects.get(used_meas_id=diff_meas).meas_type.meas_name)
+        
 
     headerRow = ['Timestamp', 'MeasID', 'Voltage', 'Current'] + diff_ext_meas_names #+ availableMagNamesOrdered
     writer.writerow(headerRow)
@@ -1027,7 +1055,7 @@ def getCsv(request, exp_id_selected):
         diff_ext_meas_values = {}
         raw_diff_ext_meas_values = {}
         for diff_meas in diff_ext_meas_list:
-            raw_diff_ext_meas_values[diff_meas] = Extendedmeasures.objects.filter(exp_id=exp_id_selected).filter(meas_type=diff_meas).order_by('meas_id').values('meas_id', 'value')
+            raw_diff_ext_meas_values[diff_meas] = Extendedmeasures.objects.filter(exp_id=exp_id_selected).filter(used_meas_id=diff_meas).order_by('meas_id').values('meas_id', 'value')
             diff_ext_meas_values[diff_meas] = {raw_row['meas_id'] : raw_row['value'] for raw_row in raw_diff_ext_meas_values[diff_meas]}
 
         for generic_measure in generic_measures:
