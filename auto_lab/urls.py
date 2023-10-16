@@ -24,4 +24,7 @@ urlpatterns = [
     path('get-new-graph/', views.getNewGraph, name='get-new-graph'),
     path('get-profiles/', views.getProfiles, name='get-profiles'),
     path('generate_previews/', views.generatePreviews, name='generate-previews'),
+    path('cycler_station/', views.cycler_station, name='cycler_station'),
+    path('csofcu/', views.getCsOfCu, name='get-cs-of-cu'),
+    path('detdevofcu/', views.getDetectedDevicesOfCu, name='get-det-dev-of-cu'),
 ]

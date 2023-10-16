@@ -66,6 +66,10 @@
                     <a class="nav-link myNavBar" href="{% url 'experiments' %}">Experiments</a>
                 </li>
                 <li class="nav-item myNavBar"
+                    {% if request.resolver_match.url_name == 'cycler_station' %}id="myActiveNavBar"{% endif %}>
+                    <a class="nav-link myNavBar" href="{% url 'cycler_station' %}">Cycler Station</a>
+                </li>
+                <li class="nav-item myNavBar"
                     {% if request.resolver_match.url_name == 'add_battery' %}id="myActiveNavBar"{% endif %}>
                     <a class="nav-link myNavBar" href="{% url 'add_battery' %}">Add battery</a>
                 </li>

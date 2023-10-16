@@ -1,6 +1,6 @@
 import os
 from time import gmtime, strftime, time, localtime
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import csv
 import json
 
@@ -16,7 +16,7 @@ from auto_lab.models import Alarm, Battery, Compatibledevices, Computationalunit
                                 Cyclerstation, Experiment, Extendedmeasures, Genericmeasures, \
                                 Instructions, Leadacid, Lithium, Profile, \
                                 Redoxelectrolyte, Redoxstack, Devicestatus, Useddevices, \
-                                Usedmeasures, Availablemeasures
+                                Usedmeasures, Availablemeasures, Detecteddevices
 from auto_lab.models_types import Technology_e, Chemistry_Lithium_e, Chemistry_LeadAcid_e, BipolarType_e, \
                          MembraneType_e, ElectrolyteType_e, DeviceType_e, Available_e, ExperimentStatus_e, \
                          DeviceStatus_e, Mode_e, LimitType_e
@@ -1097,3 +1097,54 @@ def generatePreviews(request):
         print('Forbidden access!')
 
     return HttpResponse('<h1>403 - Forbidden</h1>')
+
+
+def cycler_station(request):
+    cycler_stations = Cyclerstation.objects.all()
+    # active_cu = Computationalunit.objects.filter(available=Available_e.ON).filter(last_connection__gte=datetime.now(timezone.utc)-timedelta(minutes=10))
+    active_cu = Computationalunit.objects.filter(available=Available_e.ON)
+    filtered_cu = []
+    # Set as not available the CUs that have not been connected for more than 1 minute
+    for cu in active_cu:
+        if cu.last_connection > datetime.now(timezone.utc)-timedelta(minutes=100000): # TODO: Change to 1 minute
+            filtered_cu.append(cu)
+        else:
+            cu.available = Available_e.OFF
+            cu.save()
+    
+    context = {
+        'cycler_stations': cycler_stations,
+        'active_cu': filtered_cu,
+    }
+    return render(request, 'cycler_station.html', context)
+
+
+def getCsOfCu(request):
+    post_dict = dict(request.POST)
+    cu_id = post_dict['cu_id'][0]
+    cs = Cyclerstation.objects.filter(cu_id=cu_id).filter(deprecated=False)
+    cs = cs.values('cs_id', 'name')
+    response = list(cs)
+    return HttpResponse(json.dumps(response))
+
+
+def getDetectedDevicesOfCu(request):
+    post_dict = dict(request.POST)
+    cu_id = post_dict['cu_id'][0]
+    active_cs_ids = Cyclerstation.objects.filter(cu_id=cu_id).filter(deprecated=False)
+    active_used_devices = Useddevices.objects.filter(cs_id__in=active_cs_ids)
+    detected_devices = Detecteddevices.objects.filter(cu_id=cu_id)
+    free_devices = detected_devices.exclude(dev_id__in=active_used_devices)
+
+    # print(f"Detected_devices: {detected_devices}")
+    # print(f"Used_devices: {active_used_devices}")
+    # print(f"Free_devices: {free_devices}")
+
+    response = {}
+    for device in free_devices:
+        response[device.dev_id] = {'free': True, 'sn': device.sn, 'name': device.comp_dev_id.name, 'device_type': device.comp_dev_id.device_type, 'available_measures': list(Availablemeasures.objects.filter(comp_dev_id=device.comp_dev_id).values('meas_type', 'meas_name'))}
+    for device in active_used_devices:
+        response[device.dev_id.dev_id] = {'free': False, 'sn': device.dev_id.sn, 'name': device.dev_id.comp_dev_id.name, 'device_type': device.dev_id.comp_dev_id.device_type}
+    # print(response)
+
+    return HttpResponse(json.dumps(response))

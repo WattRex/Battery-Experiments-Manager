@@ -358,6 +358,7 @@ ul.disabled .radioBtn:checked + .profileRadioContainer{
     background-color: #fff;
     border-color: #dee2e6 #dee2e6 #fff;
     border-width: 2px 2px 0px 2px !important;
+    border-radius: 8px 8px 0px 0px !important;
     margin-bottom: -2px !important;
 }
 
@@ -633,3 +634,170 @@ div.experimentsMainPanel > h1 {
 td {
     vertical-align: middle !important;
 }
+
+
+/*---------------------------------------- CYCLER STATION ----------------------------------------*/
+.tab-content>.tab-pane-cs {
+    /* border: 2px solid #dee2de;
+    border-top-width: 0px;
+    padding: 10px;
+    background-color: #fff; */
+    min-height: 131px !important;
+    border-radius: 0px 0px 8px 8px;
+}
+
+.devicePanel {
+    margin-top: 8px;
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+    border: 2px solid #dee2de;
+    border-radius: 8px;
+    background-color: #FFFFFF;
+}
+
+.devices-selector, .measures-selector {
+    min-height: 300px;
+    padding-top: 10px;
+}
+
+.devices-selector {
+    padding-left: 10px !important;
+    padding-right: 0px !important;
+}
+
+.measures-selector {
+    padding: 10px 10px 10px 0px !important;
+}
+
+.device {
+    border: 2px solid #cecece;
+    background-color: #EAEAEA;
+    height: 50px;
+    line-height: 45px;
+    display: flex;
+    flex-direction: row;
+    overflow: clip !important;
+    margin-bottom: 10px;
+    margin-right: 10px;
+    position: relative;
+    cursor: pointer;
+}
+
+.device > * {
+    pointer-events: none;
+}
+
+.device:hover {
+    background-color: #d5dfe9 !important;
+}
+
+.device.active:hover {
+    background-image: linear-gradient(to right, #d5dfe9 0%, #d5dfe9 75%, #EAEAEA 100%);
+}
+
+.device:first-child {
+    border-radius: 8px 0px 0px 0px;
+}
+
+.device:last-child {
+    border-radius: 0px 0px 0px 8px;
+}
+
+.device>p{
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin: 0px;
+}
+
+.device.disabled {
+    background-color: #f8f8f8;
+    border-color: #dadada;
+    color: #c5c5c5;
+    pointer-events: none;
+}
+
+.selected-icon {
+    background-color: #007bff;
+    height: 100%;
+    width: 10px;
+    min-width: 10px;
+    border-color: inherit;
+    outline: 2px solid #cecece;
+    margin-right: 7px;
+    opacity: 0;
+    z-index: 5;
+}
+
+.device.selected>.selected-icon {
+    opacity: 1;
+}
+
+.device.active {
+    margin-right: -2px !important;
+    border-right: 0px !important;
+    z-index: 10;
+}
+
+.measures-container {
+    border: 2px solid #cecece;
+    border-radius: 0px 8px 8px 0px;
+    background-color: #EAEAEA;
+    height: 50px;
+    width: 100%;
+    line-height: 45px;
+    margin-bottom: 10px;
+    height: 100%;
+    position: relative;
+    z-index: 1;
+    padding: 10px;
+}
+
+.measure {
+    border: 2px solid #cecece;
+    background-color: #dfdfdf;
+    height: 50px;
+    width: 140px;
+    min-width: 140px;
+    line-height: 45px;
+    display: inline-flex;
+    flex-direction: row;
+    overflow: clip !important;
+    margin-bottom: 10px;
+    margin-right: 10px;
+    position: relative;
+    cursor: pointer;
+}
+
+.measure > * {
+    pointer-events: none;
+}
+
+.measure.selected>.selected-icon {
+    opacity: 1;
+}
+
+.measure-text {
+    overflow: visible;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin: 0px;
+    display: inline-flex;
+    z-index: 0;
+}
+
+.measure:hover {
+    background-color: #d5dfe9 !important;
+}
+
+.measure:hover>.measure-text {
+    animation:  marquee_1 8s linear 1 alternate;
+}
+
+@keyframes marquee_1 {
+    0%   { transform: translate(0%, 0); }
+    20%   { transform: translate(0%, 0); }
+    60% { transform: translate(-75%, 0); }
+    100% { transform: translate(0%, 0); }
+}
+
