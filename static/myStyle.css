@@ -665,6 +665,13 @@ td {
     padding-right: 0px !important;
 }
 
+.devicePanel.is-invalid {
+    /*box-shadow: 0px 0px 10px 2px rgba(255, 0, 0, 0.25);*/
+    -webkit-box-shadow: 0px 0px 0px 1px rgba(255,0,0,0.75);
+    -moz-box-shadow: 0px 0px 0px 1px rgba(255,0,0,0.75);
+    box-shadow: 0px 0px 0px 1px rgba(255,0,0,0.75);
+}
+
 .measures-selector {
     padding: 10px 10px 10px 0px !important;
 }

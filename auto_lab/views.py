@@ -1123,7 +1123,7 @@ def getCsOfCu(request):
     post_dict = dict(request.POST)
     cu_id = post_dict['cu_id'][0]
     cs = Cyclerstation.objects.filter(cu_id=cu_id).filter(deprecated=False)
-    cs = cs.values('cs_id', 'name')
+    cs = cs.values('cs_id', 'name', 'location')
     response = list(cs)
     return HttpResponse(json.dumps(response))
 
@@ -1142,9 +1142,78 @@ def getDetectedDevicesOfCu(request):
 
     response = {}
     for device in free_devices:
-        response[device.dev_id] = {'free': True, 'sn': device.sn, 'name': device.comp_dev_id.name, 'device_type': device.comp_dev_id.device_type, 'available_measures': list(Availablemeasures.objects.filter(comp_dev_id=device.comp_dev_id).values('meas_type', 'meas_name'))}
+        response[device.dev_id] = {'free': True, 'selected': False, 'sn': device.sn, 'name': device.comp_dev_id.name, 'device_type': device.comp_dev_id.device_type, 'available_measures': list(Availablemeasures.objects.filter(comp_dev_id=device.comp_dev_id).values('meas_type', 'meas_name'))}
     for device in active_used_devices:
-        response[device.dev_id.dev_id] = {'free': False, 'sn': device.dev_id.sn, 'name': device.dev_id.comp_dev_id.name, 'device_type': device.dev_id.comp_dev_id.device_type}
-    # print(response)
+        response[device.dev_id.dev_id] = {'free': False, 'selected': False, 'sn': device.dev_id.sn, 'name': device.dev_id.comp_dev_id.name, 'device_type': device.dev_id.comp_dev_id.device_type, 'available_measures': list(Availablemeasures.objects.filter(comp_dev_id=device.dev_id.comp_dev_id).values('meas_type', 'meas_name'))}
+
+    if 'cs_id' in post_dict and post_dict['cs_id'][0] != "":
+        cs_id = post_dict['cs_id'][0]
+        cs_used_devices = Useddevices.objects.filter(cs_id=cs_id)
+        for device in cs_used_devices:
+            response[device.dev_id.dev_id]['free'] = True
+            response[device.dev_id.dev_id]['selected'] = True
+            for meas in response[device.dev_id.dev_id]['available_measures']:
+                used_meas = Usedmeasures.objects.filter(cs_id=cs_id).filter(dev_id=device.dev_id.dev_id).filter(meas_type=meas['meas_type'])
+                if len(used_meas) > 0:
+                    meas['selected'] = True
+                    meas['custom_name'] = used_meas[0].custom_name
+                else:
+                    meas['selected'] = False
+                    meas['custom_name'] = None
+
+
+            # tmp_selected_measures = Usedmeasures.objects.filter(cs_id=cs_id).filter(dev_id=device.dev_id.dev_id)
+
+            # response[device.dev_id.dev_id]['selected_measures'] = []
+            # for meas in tmp_selected_measures:
+            #     response[device.dev_id.dev_id]['selected_measures'].append({'meas_type': meas.meas_type.meas_type, 'used_meas_id': meas.used_meas_id, 'meas_name': meas.meas_type.meas_name, 'custom_name': meas.custom_name})
 
     return HttpResponse(json.dumps(response))
+
+
+def addNewCs(request):
+    post_dict = dict(request.POST)
+    print(json.loads(post_dict['selected_devices'][0]))
+    cu_id = post_dict['cu_id'][0]
+    selected_devices = json.loads(post_dict['selected_devices'][0])
+    new_cs = Cyclerstation.objects.create(cu_id=Computationalunit.objects.get(cu_id=cu_id),
+                                          name=post_dict['cs_name'][0],
+                                          location=post_dict['cs_location'][0],
+                                          register_date=datetime.now(timezone.utc),
+                                          deprecated=False)
+    new_cs.save()
+    new_used_devices = []
+    for device in selected_devices:
+        new_used_devices.append(Useddevices.objects.create(cs_id=new_cs,
+                                                           dev_id=Detecteddevices.objects.get(dev_id=device['dev_id']),))
+    # new_used_devices = Useddevices.objects.bulk_create(new_used_devices)
+    for dev in new_used_devices:
+        try:
+            dev.save()
+        except Exception as e:
+            print(e)
+
+    new_used_meas = []
+    for device in selected_devices:
+        for meas in device['measures']:
+            new_used_meas.append(Usedmeasures.objects.create(cs_id=new_cs,
+                                                        dev_id=Detecteddevices.objects.get(dev_id=device['dev_id']),
+                                                        meas_type=Availablemeasures.objects.get(comp_dev_id=Detecteddevices.objects.get(dev_id=device['dev_id']).comp_dev_id, meas_type=meas['meas_type']),
+                                                        custom_name=meas['custom_name']))
+    # new_used_meas = Usedmeasures.objects.bulk_create(new_used_meas)
+    for meas in new_used_meas:
+        try:
+            meas.save()
+        except Exception as e:
+            print(e)
+
+    return HttpResponse(json.dumps({'status': 'OK'}))
+
+
+def deleteCs(request):
+    post_dict = dict(request.POST)
+    cs_id = post_dict['cs_id'][0]
+    cs = Cyclerstation.objects.get(cs_id=cs_id)
+    cs.deprecated = True
+    cs.save()
+    return HttpResponse(json.dumps({'status': 'OK'}))

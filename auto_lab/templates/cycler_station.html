@@ -61,7 +61,7 @@
                                         </div>
                                         <div class="form-group col-12 col-md-4">
                                             <label for="csLocationModify">Location</label>
-                                            <input type="text" minlength="1" maxlength="30" class="form-control marginBottom" name="csLocation_input" id="csLocationModify" placeholder="" required>
+                                            <input type="text" minlength="1" maxlength="30" class="form-control marginBottom" name="csLocation_input" id="csLocationModify" placeholder="" required disabled>
                                         </div>
                                     </div>
                                 </div>
@@ -103,7 +103,7 @@
                     </div>
                     <div class="col-12">
                         {% comment %} <div class="devicePanel"> {% endcomment %}
-                            <div class="row devicePanel">
+                            <div id="device-panel" class="row devicePanel">
                                 <div id="devices-selector" class="col-3 devices-selector">
                                     
                                     <!-- DEVICE EXAMPLE (selected and active are optional; Selected for blue check and active for measure display)
@@ -165,6 +165,10 @@
   /\__/ /| | | |\ \_/ /| | | |/\__/ /| \__/\| |\ \  _| |_ | |      | |  
   \____/ \_| |_/ \___/ \_| |_/\____/  \____/\_| \_| \___/ \_|      \_/  */
 
+    const btnAddTab = document.getElementById("nav-add-tab");
+    const btnModifyTab = document.getElementById("nav-modify-tab");
+    const btnDeleteTab = document.getElementById("nav-delete-tab");
+
     const csCuAdd = document.getElementById("csCuAdd");
     $('#csCuAdd').selectpicker();
     csCuAdd.addEventListener("change", refresh_devices_add);
@@ -177,11 +181,23 @@
 
     const csNameModify = document.getElementById("csNameModify");
     $('#csNameModify').selectpicker();
+    csNameModify.addEventListener("change", refresh_devices_modify);
+    const csLocationModify = document.getElementById("csLocationModify");
+
     const csNameDelete = document.getElementById("csNameDelete");
     $('#csNameDelete').selectpicker();
 
+    const btnDelete = document.getElementById("csBtnDelete");
+    btnDelete.addEventListener("click", delete_cs);
+
+    const btnRefresh = document.getElementById("btnDeviceRefresh");
+    btnRefresh.addEventListener("click", refresh_devices_btn);
+
     const devicesSelector = document.getElementById("devices-selector");
     const measuresContainer = document.getElementById("measures-container");
+
+    const btnSubmit = document.getElementById("btnSubmit");
+    btnSubmit.addEventListener("click", submit_form);
 
     function get_cs_from_cu(cu_id) { // Return the new data for the selectpicker. It is called when the user changes the cu in the modify or delete tabs. cu_id has to be an int
         let result = "";
@@ -204,11 +220,15 @@
 
     function reload_cs_modify() {
         if (csCuModify.value != "") {
+            devicesSelector.innerHTML = "";
+            measuresContainer.innerHTML = "";
+            csLocationModify.value = "";
+            btnRefresh.disabled = true;
             $('#csNameModify').prop('disabled', false);
             csNameModify.innerHTML = "";
             let cs_retrieved = get_cs_from_cu(csCuModify.value)
             for (cs of cs_retrieved) {
-                csNameModify.innerHTML += '<option data-tokens="' + cs.name + '" value="' + cs.cs_id + '" label="' + cs.name + '">' + cs.name + '</option>';
+                csNameModify.innerHTML += '<option data-location="' + cs.location + '" data-tokens="' + cs.name + '" value="' + cs.cs_id + '" label="' + cs.name + '">' + cs.name + '</option>';
             }
             $('#csNameModify').selectpicker('refresh');
         } else {
@@ -240,14 +260,15 @@
         $('#csCuDelete').selectpicker('deselectAll');
         $('#csNameModify').selectpicker('deselectAll');
         $('#csNameDelete').selectpicker('deselectAll');
-        document.getElementById('btnDeviceRefresh').disabled = true;
+        btnRefresh.disabled = true;
         devicesSelector.innerHTML = "";
         measuresContainer.innerHTML = "";
+        csLocationModify.value = "";
     }
 
-    function refresh_devices(cu_id) {
+    function refresh_devices(cu_id, cs_id = null) {
         let result = "";
-        document.getElementById('btnDeviceRefresh').disabled = false;
+        btnRefresh.disabled = false;
         $.ajax({
             async: false,
             type: "POST",
@@ -255,6 +276,7 @@
             // contentType: "application/json; charset=utf-8",
             data: { csrfmiddlewaretoken: '{{ csrf_token }}',
                     cu_id: cu_id,
+                    cs_id: cs_id,
                 },
             success:  function(response){
                 response = JSON.parse(response);
@@ -270,9 +292,12 @@
     function create_devices(devices) {
         devices_keys = Object.keys(devices);
         for (let device of devices_keys) {
-            class_info = "device";
+            let class_info = "device";
             if (devices[device].free == false) {
                 class_info += " disabled";
+            }
+            if (devices[device].selected == true) {
+                class_info += " selected";
             }
             let div_device = '<div id="dev-id-' + device + '" class="' + class_info + '" data-sn="' + devices[device].sn + '"data-dev-id="' + device + '">'
                             +'<div class="selected-icon"></div>'
@@ -282,13 +307,25 @@
 
             if (Object.keys(devices[device]).includes("available_measures")) {
                 for (let measure of devices[device].available_measures) {
-                    let div_measure = '<div class="measure dev-id-' + device + '" data-meas-type="' + measure.meas_type + '" hidden>'
+                    let class_info_meas = "measure dev-id-" + device;
+                    if (measure.selected == true) {
+                        class_info_meas += " selected";
+                        // measure.meas_name = measure.custom_name;
+                    }
+                    let custom_name = '<p hidden>&nbsp;→&nbsp;</p>'
+                                     +'<p hidden></p>';
+                    if (Object.keys(measure).includes('custom_name')) {
+                        if (measure.custom_name != null) {
+                            custom_name = '<p>&nbsp;→&nbsp;</p>'
+                                          +'<p>' + measure.custom_name + '</p>';
+                        }
+                    }
+                    let div_measure = '<div class="' + class_info_meas + '" data-meas-type="' + measure.meas_type + '" hidden>'
                                                 +'<div class="selected-icon">'
                                                 +'</div>'
                                                 +'<div class="measure-text">'
                                                     +'<p>' + measure.meas_name + '</p>'
-                                                    +'<p hidden>&nbsp;→&nbsp;</p>'
-                                                    +'<p hidden></p>'
+                                                    + custom_name
                                                 +'</div>'
                                             +'</div>';
                     measuresContainer.innerHTML += div_measure;
@@ -305,11 +342,30 @@
 
     }
 
+    function refresh_devices_btn() {
+        if (btnAddTab.classList.contains("active")) {
+            refresh_devices_add();
+        } else if (btnModifyTab.classList.contains("active")) {
+            refresh_devices_modify();
+        }
+    }
+
     function refresh_devices_add() {
         devicesSelector.innerHTML = "";
         measuresContainer.innerHTML = "";
         if (csCuAdd.value != "") {
             devices_to_create = refresh_devices(csCuAdd.value);
+            create_devices(devices_to_create);
+
+        }
+    }
+
+    function refresh_devices_modify() {
+        devicesSelector.innerHTML = "";
+        measuresContainer.innerHTML = "";
+        if (csNameModify.value != "") {
+            csLocationModify.value = csNameModify.options[csNameModify.selectedIndex].getAttribute('data-location');
+            devices_to_create = refresh_devices(csCuModify.value, csNameModify.value);
             create_devices(devices_to_create);
 
         }
@@ -369,6 +425,116 @@
             device.classList.remove('selected');
         } else {
             device.classList.add('selected');
+        }
+    }
+
+    function submit_form() {
+        if (btnAddTab.classList.contains("active")) {
+            add_new_cs();
+        } else if (btnModifyTab.classList.contains("active")) {
+            modify_cs();
+        }
+    }
+
+    function add_new_cs() {
+        let is_valid = true;
+        if (csCuAdd.value != "") {
+            csCuAdd.classList.remove("btn-light-invalid");
+        } else {
+            csCuAdd.classList.add("btn-light-invalid");
+            is_valid = false;
+        }
+        
+        if (document.getElementById("csNameAdd").value != "" && document.getElementById("csNameAdd").value.length <= 30) {
+            document.getElementById("csNameAdd").classList.remove("is-invalid");
+        } else {
+            document.getElementById("csNameAdd").classList.add("is-invalid");
+            is_valid = false;
+        }
+
+        if (document.getElementById("csLocationAdd").value != "" && document.getElementById("csLocationAdd").value.length <= 30) {
+            document.getElementById("csLocationAdd").classList.remove("is-invalid");
+        } else {
+            document.getElementById("csLocationAdd").classList.add("is-invalid");
+            is_valid = false;
+        }
+
+        if (devicesSelector.getElementsByClassName("device selected").length == 0) {
+            document.getElementById("device-panel").classList.add("is-invalid");
+            is_valid = false;
+        } else {
+            document.getElementById("device-panel").classList.remove("is-invalid");
+        }
+
+        if (is_valid) {
+            console.log("ADD NEW!!!");
+            let selected_devices = [];
+            for (let device of devicesSelector.getElementsByClassName("device selected")) {
+                let selected_measures = [];
+                for (let measure of measuresContainer.getElementsByClassName(device.id + " selected")) {
+                    let measure_to_add = {};
+                    measure_to_add["meas_type"] = measure.getAttribute("data-meas-type");
+                    if (measure.getElementsByClassName("measure-text")[0].getElementsByTagName("p")[2].innerHTML != "") {
+                        measure_to_add["custom_name"] = measure.getElementsByClassName("measure-text")[0].getElementsByTagName("p")[2].innerHTML;
+                    } else {
+                        measure_to_add["custom_name"] = null;
+                    }
+                    selected_measures.push(measure_to_add);
+                }
+                selected_devices.push({
+                    "dev_id": device.getAttribute("data-dev-id"),
+                    "measures": selected_measures,
+                });
+            }
+            console.log(selected_devices);
+            $.ajax({
+                async: false,
+                type: "POST",
+                url: "{% url 'add-new-cs' %}",
+                // contentType: "application/json; charset=utf-8",
+                data: { csrfmiddlewaretoken: '{{ csrf_token }}',
+                        cu_id: csCuAdd.value,
+                        selected_devices: JSON.stringify(selected_devices),
+                        cs_name: document.getElementById("csNameAdd").value,
+                        cs_location: document.getElementById("csLocationAdd").value,
+                    },
+                success:  function(response){
+                    response = JSON.parse(response);
+                    if (response.status == "OK") {
+                        alert("✅ New Cycler Station added successfully");
+                        location.reload(); // TODO: Change to redirect to add_experiment view
+                    } else {
+                        alert("❌ Error adding the new Cycler Station");
+                    }
+                },
+                error: function(response) {
+                    alert("ERROR");
+                }
+            });
+        }
+
+    }
+
+    function delete_cs() {
+        if (csNameDelete.value != "") {
+            $.ajax({
+                async: false,
+                type: "POST",
+                url: "{% url 'delete-cs' %}",
+                // contentType: "application/json; charset=utf-8",
+                data: { csrfmiddlewaretoken: '{{ csrf_token }}',
+                        cs_id: csNameDelete.value,
+                    },
+                success:  function(response){
+                    response = JSON.parse(response);
+                    if (response.status == "OK") {
+                        alert("✅ Cycler Station deleted successfully");
+                        location.reload();
+                    } else {
+                        alert("❌ Error deleting the Cycler Station");
+                    }
+                },
+            });
         }
     }
 

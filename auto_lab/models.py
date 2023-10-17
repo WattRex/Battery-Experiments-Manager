@@ -163,7 +163,7 @@ class Availablemeasures(models.Model):
 class Usedmeasures(models.Model):
     used_meas_id = models.AutoField(db_column='UsedMeasID', primary_key=True)  # Field name made lowercase.
     cs_id = models.ForeignKey(Cyclerstation, models.DO_NOTHING, db_column='CSID')  # Field name made lowercase.
-    dev_id = models.ForeignKey(Useddevices, models.DO_NOTHING, db_column='DevID')  # Field name made lowercase.
+    dev_id = models.ForeignKey(Detecteddevices, models.DO_NOTHING, db_column='DevID')  # Field name made lowercase.
     meas_type = models.ForeignKey(Availablemeasures, models.DO_NOTHING, db_column='MeasType')  # Field name made lowercase.
     custom_name = models.CharField(db_column='CustomName', max_length=30, blank=True, null=True)  # Field name made lowercase.
 
