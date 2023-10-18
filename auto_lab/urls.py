@@ -28,5 +28,6 @@ urlpatterns = [
     path('csofcu/', views.getCsOfCu, name='get-cs-of-cu'),
     path('detdevofcu/', views.getDetectedDevicesOfCu, name='get-det-dev-of-cu'),
     path('deleteCs/', views.deleteCs, name='delete-cs'),
-    path('addNewCS/', views.addNewCs, name='add-new-cs'),
+    path('addNewCs/', views.addNewCs, name='add-new-cs'),
+    path('modifyCs/', views.modifyCs, name='modify-cs'),
 ]

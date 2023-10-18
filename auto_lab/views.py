@@ -551,7 +551,7 @@ def translateMeasuresNames(request):
 
 def add_experiment(request):
     batteries = Battery.objects.all()
-    cycler_stations = Cyclerstation.objects.all()
+    cycler_stations = Cyclerstation.objects.filter(deprecated=False)
     redox_stack = {}
     redox_stack['bipolar_type'] = BipolarType_e.values
     redox_stack['membrane_type'] = MembraneType_e.values
@@ -1180,6 +1180,50 @@ def addNewCs(request):
                                           name=post_dict['cs_name'][0],
                                           location=post_dict['cs_location'][0],
                                           register_date=datetime.now(timezone.utc),
+                                          deprecated=False)
+    new_cs.save()
+    new_used_devices = []
+    for device in selected_devices:
+        new_used_devices.append(Useddevices.objects.create(cs_id=new_cs,
+                                                           dev_id=Detecteddevices.objects.get(dev_id=device['dev_id']),))
+    # new_used_devices = Useddevices.objects.bulk_create(new_used_devices)
+    for dev in new_used_devices:
+        try:
+            dev.save()
+        except Exception as e:
+            print(e)
+
+    new_used_meas = []
+    for device in selected_devices:
+        for meas in device['measures']:
+            new_used_meas.append(Usedmeasures.objects.create(cs_id=new_cs,
+                                                        dev_id=Detecteddevices.objects.get(dev_id=device['dev_id']),
+                                                        meas_type=Availablemeasures.objects.get(comp_dev_id=Detecteddevices.objects.get(dev_id=device['dev_id']).comp_dev_id, meas_type=meas['meas_type']),
+                                                        custom_name=meas['custom_name']))
+    # new_used_meas = Usedmeasures.objects.bulk_create(new_used_meas)
+    for meas in new_used_meas:
+        try:
+            meas.save()
+        except Exception as e:
+            print(e)
+
+    return HttpResponse(json.dumps({'status': 'OK'}))
+
+
+def modifyCs(request):
+    post_dict = dict(request.POST)
+    print(json.loads(post_dict['selected_devices'][0]))
+    cu_id = post_dict['cu_id'][0]
+    selected_devices = json.loads(post_dict['selected_devices'][0])
+    cs_id_to_deprecate = post_dict['cs_id'][0]
+    cs_to_deprecate = Cyclerstation.objects.get(cs_id=cs_id_to_deprecate)
+    cs_to_deprecate.deprecated = True
+    cs_to_deprecate.save()
+    new_cs = Cyclerstation.objects.create(cu_id=Computationalunit.objects.get(cu_id=cu_id),
+                                          name=cs_to_deprecate.name,
+                                          location=cs_to_deprecate.location,
+                                          register_date=datetime.now(timezone.utc),
+                                          parent=cs_to_deprecate.cs_id,
                                           deprecated=False)
     new_cs.save()
     new_used_devices = []

@@ -515,6 +515,75 @@
 
     }
 
+    function modify_cs() {
+        let is_valid = true;
+        if (csCuModify.value != "") {
+            csCuModify.classList.remove("btn-light-invalid");
+        } else {
+            csCuModify.classList.add("btn-light-invalid");
+            is_valid = false;
+        }
+        if (csNameModify.value != "") {
+            csNameModify.classList.remove("btn-light-invalid");
+        } else {
+            csNameModify.classList.add("btn-light-invalid");
+            is_valid = false;
+        }
+
+        if (devicesSelector.getElementsByClassName("device selected").length == 0) {
+            document.getElementById("device-panel").classList.add("is-invalid");
+            is_valid = false;
+        } else {
+            document.getElementById("device-panel").classList.remove("is-invalid");
+        }
+
+        if (is_valid) {
+            console.log("MODIFY!!!");
+            let selected_devices = [];
+            for (let device of devicesSelector.getElementsByClassName("device selected")) {
+                let selected_measures = [];
+                for (let measure of measuresContainer.getElementsByClassName(device.id + " selected")) {
+                    let measure_to_add = {};
+                    measure_to_add["meas_type"] = measure.getAttribute("data-meas-type");
+                    if (measure.getElementsByClassName("measure-text")[0].getElementsByTagName("p")[2].innerHTML != "") {
+                        measure_to_add["custom_name"] = measure.getElementsByClassName("measure-text")[0].getElementsByTagName("p")[2].innerHTML;
+                    } else {
+                        measure_to_add["custom_name"] = null;
+                    }
+                    selected_measures.push(measure_to_add);
+                }
+                selected_devices.push({
+                    "dev_id": device.getAttribute("data-dev-id"),
+                    "measures": selected_measures,
+                });
+            }
+            console.log(selected_devices);
+            $.ajax({
+                async: false,
+                type: "POST",
+                url: "{% url 'modify-cs' %}",
+                // contentType: "application/json; charset=utf-8",
+                data: { csrfmiddlewaretoken: '{{ csrf_token }}',
+                        cu_id: csCuModify.value,
+                        selected_devices: JSON.stringify(selected_devices),
+                        cs_id: csNameModify.value,
+                    },
+                success:  function(response){
+                    response = JSON.parse(response);
+                    if (response.status == "OK") {
+                        alert("✅ Cycler Station modified successfully");
+                        location.reload(); // TODO: Change to redirect to add_experiment view
+                    } else {
+                        alert("❌ Error modifing the Cycler Station");
+                    }
+                },
+                error: function(response) {
+                    alert("ERROR");
+                }
+            });
+        }
+    }
+
     function delete_cs() {
         if (csNameDelete.value != "") {
             $.ajax({
