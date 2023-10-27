@@ -20,11 +20,11 @@ log: Logger = sys_log_logger_get_module_logger(__name__)
 
 #######################          MODULE IMPORTS          #######################
 from mn_broker_client import BrokerClientC
-from mn_cmds import MnCmdDataC, MnCmdTypeE
 from mn_db_facade import DbFacadeC
 
-from wattrex_battery_cycler_datatypes.comm_data import CommDataCuC,\
-    CommDataRegisterTypeE, CommDataHeartbeatC, CommDataDeviceC
+from wattrex_battery_cycler_datatypes.comm_data import (CommDataCuC,CommDataRegisterTypeE, 
+                                                        CommDataHeartbeatC, CommDataDeviceC, 
+                                                        CommDataMnCmdDataC, CommDataMnCmdTypeE)
 
 #######################          PROJECT IMPORTS         #######################
 from system_shared_tool import SysShdIpcChanC, SysShdNodeC
@@ -85,17 +85,17 @@ class MnManagerNodeC(SysShdNodeC):
     def detect_devices_cb(self, cu_id : int, devices : List[CommDataDeviceC]) -> None:
         log.info(f"Devices detected for [{cu_id}]: {devices}")
         self.db_fach.update_devices(cu_id, devices)
-        msg_data = MnCmdDataC(cmd_type=MnCmdTypeE.INF_DEV, cu_id=cu_id, devices=devices)
+        msg_data = CommDataMnCmdDataC(cmd_type=CommDataMnCmdTypeE.INF_DEV, cu_id=cu_id, devices=devices)
         self.mn_data_chan.send_data(msg_data)
 
 
     def apply_cmds(self) -> None:
         cmd = self.mn_req_chan.receive_data_unblocking()
-        if isinstance(cmd, MnCmdDataC):
+        if isinstance(cmd, CommDataMnCmdDataC):
             log.warning(f"Applying {cmd.cmd_type.name} cmd")
-            if cmd.cmd_type is MnCmdTypeE.LAUNCH:
+            if cmd.cmd_type is CommDataMnCmdTypeE.LAUNCH:
                 self.client_mqtt.publish_launch(cu_id=cmd.cu_id, cs_id=cmd.cs_id)
-            elif cmd.cmd_type is MnCmdTypeE.REQ_DETECT:
+            elif cmd.cmd_type is CommDataMnCmdTypeE.REQ_DETECT:
                 self.client_mqtt.publish_req_devices(cu_id=cmd.cu_id)
 
 
@@ -120,13 +120,13 @@ if __name__ == '__main__':
     req_chan = SysShdIpcChanC(name=_MN_REQS_CHAN_NAME)
 
     # Send launch command
-    # cmd_launch = MnCmdDataC(cmd_type=MnCmdTypeE.LAUNCH, cu_id=5, cs_id=1)
+    # cmd_launch = CommDataMnCmdDataC(cmd_type=CommDataMnCmdTypeE.LAUNCH, cu_id=5, cs_id=1)
     # log.warning(f"Sending launch cmd: {cmd_launch.cmd_type}")
     # req_chan.send_data(cmd_launch)
 
 
     # Send detect devices command
-    cmd_launch = MnCmdDataC(cmd_type=MnCmdTypeE.REQ_DETECT, cu_id=5)
+    cmd_launch = CommDataMnCmdDataC(cmd_type=CommDataMnCmdTypeE.REQ_DETECT, cu_id=5)
     log.warning(f"Sending req detect cmd: {cmd_launch.cmd_type}")
     req_chan.send_data(cmd_launch)
 

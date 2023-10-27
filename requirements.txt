@@ -9,3 +9,7 @@ protobuf==3.19.1
 soupsieve==2.3.1
 sqlparse==0.4.2
 kaleido==0.2.1
+system-logger-tool
+system-shared-tool
+wattrex-battery-cycler-datatypes
+wattrex-driver-mqtt
