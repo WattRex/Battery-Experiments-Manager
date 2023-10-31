@@ -4,15 +4,9 @@ django-bootstrap4==21.1
 plotly==5.16.1
 asgiref==3.4.1
 beautifulsoup4==4.10.0
-# mysql-connector-python==8.0.26 # Disabled due to wattrex-driver-db (it installs newer version)
 protobuf==3.19.1
 soupsieve==2.3.1
 sqlparse==0.4.2
 kaleido==0.2.1
-system-logger-tool
-system-shared-tool
-wattrex-battery-cycler-datatypes==0.0.6
-wattrex-driver-mqtt
-wattrex-driver-db
-# mysql-connector-python>=8.0.33
-# SQLAlchemy>=1.4.41
+# mysql-connector-python==8.0.26 # Disabled due to wattrex-mn-manager (it installs newer version)
+wattrex-mn-manager
