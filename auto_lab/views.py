@@ -1,4 +1,4 @@
-import os
+import os, sys
 from time import gmtime, strftime, time, localtime
 from datetime import datetime, timedelta, timezone
 import csv
@@ -27,6 +27,14 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from plotly import io as pio
 
+from wattrex_battery_cycler_datatypes.comm_data import CommDataMnCmdDataC, CommDataMnCmdTypeE
+from system_shared_tool import SysShdIpcChanC
+
+from mn_manager import MN_REQS_CHAN_NAME, MN_DATA_CHAN_NAME
+
+# Global chan to communicate with the MN
+_MN_REQ_CHAN : SysShdIpcChanC = SysShdIpcChanC(name=MN_REQS_CHAN_NAME)
+_MN_DATA_CHAN : SysShdIpcChanC = SysShdIpcChanC(name=MN_DATA_CHAN_NAME)
 
 def graph(request):
     someDict = {'equipmentSelected': {'children': 'Empty'}}
@@ -1102,19 +1110,19 @@ def generatePreviews(request):
 def cycler_station(request):
     cycler_stations = Cyclerstation.objects.all()
     # active_cu = Computationalunit.objects.filter(available=Available_e.ON).filter(last_connection__gte=datetime.now(timezone.utc)-timedelta(minutes=10))
-    active_cu = Computationalunit.objects.filter(available=Available_e.ON)
+    active_cu = Computationalunit.objects.filter(available=Available_e.ON.value)
     filtered_cu = []
     # Set as not available the CUs that have not been connected for more than 1 minute
-    for cu in active_cu:
-        if cu.last_connection > datetime.now(timezone.utc)-timedelta(minutes=100000): # TODO: Change to 1 minute
-            filtered_cu.append(cu)
-        else:
-            cu.available = Available_e.OFF
-            cu.save()
+    # for cu in active_cu:
+    #     if cu.last_connection > datetime.now(timezone.utc)-timedelta(minutes=100000): # TODO: Change to 1 minute
+    #         filtered_cu.append(cu)
+    #     else:
+    #         cu.available = Available_e.OFF
+    #         cu.save()
     
     context = {
         'cycler_stations': cycler_stations,
-        'active_cu': filtered_cu,
+        'active_cu': active_cu,
     }
     return render(request, 'cycler_station.html', context)
 
@@ -1171,6 +1179,12 @@ def getDetectedDevicesOfCu(request):
     return HttpResponse(json.dumps(response))
 
 
+def _launch_cs(cu_id, cs_id) -> None:
+    print(f'Launching CS ({cs_id}) on CU ({cu_id})...')
+    cmd_to_mn_manager = CommDataMnCmdDataC(CommDataMnCmdTypeE.LAUNCH, cu_id, cs_id = cs_id)
+    _MN_REQ_CHAN.send(cmd_to_mn_manager)
+
+
 def addNewCs(request):
     post_dict = dict(request.POST)
     print(json.loads(post_dict['selected_devices'][0]))
@@ -1206,6 +1220,8 @@ def addNewCs(request):
             meas.save()
         except Exception as e:
             print(e)
+
+    _launch_cs(cu_id, new_cs.cs_id)
 
     return HttpResponse(json.dumps({'status': 'OK'}))
 
