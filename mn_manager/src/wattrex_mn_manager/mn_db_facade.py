@@ -6,10 +6,10 @@ Wrapper for the MQTT client
 
 #######################         GENERIC IMPORTS          #######################
 from typing import List
-from sqlalchemy.sql.expression import update, select
 from datetime import datetime
 
 #######################       THIRD PARTY IMPORTS        #######################
+from sqlalchemy.sql.expression import update, select
 
 #######################    SYSTEM ABSTRACTION IMPORTS    #######################
 from system_logger_tool import sys_log_logger_get_module_logger, SysLogLoggerC, Logger
@@ -20,45 +20,64 @@ if __name__ == '__main__':
 log: Logger = sys_log_logger_get_module_logger(__name__)
 
 #######################          MODULE IMPORTS          #######################
-from wattrex_battery_cycler_datatypes.comm_data import CommDataCuC, CommDataHeartbeatC,\
-    CommDataDeviceC
 
 #######################          PROJECT IMPORTS         #######################
-from wattrex_driver_db import DrvDbDetectedDeviceC, DrvDbSqlEngineC, DrvDbTypeE, DrvDbComputationalUnitC,\
-    DrvDbAvailableCuE, DrvDbConnStatusE
+from wattrex_battery_cycler_datatypes.comm_data import CommDataCuC, CommDataHeartbeatC,\
+    CommDataDeviceC
+from wattrex_driver_db import DrvDbDetectedDeviceC, DrvDbSqlEngineC, DrvDbTypeE,\
+                            DrvDbComputationalUnitC, DrvDbAvailableCuE, DrvDbConnStatusE
 
 #######################              ENUMS               #######################
 
 #######################             CLASSES              #######################
 
 class DbFacadeC:
+    '''This function is used to create a DbFacade class for the Django backend .
+    '''
 
     def __init__(self) -> None:
-        self.db : DrvDbSqlEngineC  = DrvDbSqlEngineC(db_type=DrvDbTypeE.MASTER_DB,
+        self.database : DrvDbSqlEngineC  = DrvDbSqlEngineC(db_type=DrvDbTypeE.MASTER_DB,
                                                             config_file='.cred.yaml')
         self.last_cu_id = 0
 
 
     def get_last_cu_id(self) -> int:
-        stmt = select(DrvDbComputationalUnitC.CUID).order_by(DrvDbComputationalUnitC.CUID.desc()).limit(1)
-        res = self.db.session.execute(stmt).first()
+        '''Get the CUDA CU ID for this simulation.
+
+        Returns:
+            int: [description]
+        '''
+        stmt = select(DrvDbComputationalUnitC.CUID)\
+                        .order_by(DrvDbComputationalUnitC.CUID.desc())\
+                        .limit(1)
+        res = self.database.session.execute(stmt).first()
         if res is not None:
             self.last_cu_id = res[0]
 
         return self.last_cu_id
 
     def get_available_cus(self) -> List[int]:
-        stmt = select(DrvDbComputationalUnitC.CUID).filter(
-            DrvDbComputationalUnitC.Available == DrvDbAvailableCuE.ON.value).\
-                order_by(DrvDbComputationalUnitC.CUID.asc())
-        res = self.db.session.execute(stmt).fetchall()
+        '''Returns a list of available CUDA units.
+
+        Returns:
+            List[int]: [description]
+        '''
+        stmt = select(DrvDbComputationalUnitC.CUID)\
+                        .filter(DrvDbComputationalUnitC.Available == DrvDbAvailableCuE.ON.value)\
+                        .order_by(DrvDbComputationalUnitC.CUID.asc())
+        res = self.database.session.execute(stmt).fetchall()
         cus = []
-        for cu in res:
-            cus.append(cu[0])
+        for c_unit in res:
+            cus.append(c_unit[0])
         return cus
 
 
     def register_cu(self, cu_info : CommDataCuC) -> None:
+        '''Register a CU data unit.
+
+        Args:
+            cu_info (CommDataCuC): [description]
+        '''
         log.info(f"Registering new CU: {cu_info}")
         self.last_cu_id += 1
         cu_db = DrvDbComputationalUnitC()
@@ -69,39 +88,53 @@ class DbFacadeC:
         cu_db.Port = cu_info.port
         cu_db.LastConnection = datetime.utcnow()
         cu_db.Available = DrvDbAvailableCuE.ON.value
-        self.db.session.add(cu_db)
+        self.database.session.add(cu_db)
 
 
-    def update_heartbeat(self, hb : CommDataHeartbeatC) -> None:
-        stmt = update(DrvDbComputationalUnitC).where(DrvDbComputationalUnitC.CUID == hb.cu_id).values(LastConnection= hb.timestamp)
-        self.db.session.execute(stmt)
+    def update_heartbeat(self, heartbeat : CommDataHeartbeatC) -> None:
+        '''Update the commData of the commdata.
+
+        Args:
+            hb (CommDataHeartbeatC): [description]
+        '''
+        stmt = update(DrvDbComputationalUnitC)\
+                        .where(DrvDbComputationalUnitC.CUID == heartbeat.cu_id)\
+                        .values(LastConnection= heartbeat.timestamp)
+        self.database.session.execute(stmt)
 
 
     def update_devices(self, cu_id : int, devices : List[CommDataDeviceC]) -> None:
-        for d in devices:
+        '''Update the list of devices in the database.
+
+        Args:
+            cu_id (int): [description]
+            devices (List[CommDataDeviceC]): [description]
+        '''
+        for device in devices:
             db_dev = DrvDbDetectedDeviceC()
             db_dev.CUID = cu_id
-            db_dev.CompDevID = d.comp_dev_id
-            db_dev.SN = d.serial_number
-            db_dev.LinkName = d.link_name
+            db_dev.CompDevID = device.comp_dev_id
+            db_dev.SN = device.serial_number
+            db_dev.LinkName = device.link_name
             db_dev.ConnStatus = DrvDbConnStatusE.CONNECTED.value
-            self.db.session.add(db_dev)
-            log.info(f"Adding device: {d.__dict__}")
+            self.database.session.add(db_dev)
+            log.info(f"Adding device: {device.__dict__}")
             # TODO: add str for CommDataDeviceC
             # TODO: use add or update: depending if exists or not
 
     def track_avail_cu(self) -> None:
-        pass
+        '''Track available CUs.
+        '''
         # TODO: implement this function
 
 
     def commit(self) -> None:
         '''
         Commit changes to the database.
-        
+
         Raise:
             Exception: if there is an error during the commit.
         '''
-        self.db.commit_changes(raise_exception=True)
+        self.database.commit_changes(raise_exception=True)
 
 #######################            FUNCTIONS             #######################
