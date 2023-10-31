@@ -7,5 +7,5 @@ from .mn_manager_node import MN_DATA_CHAN_NAME, MN_REQS_CHAN_NAME, MnManagerNode
 from .mn_broker_client import BrokerClientC
 from .mn_db_facade import DbFacadeC
 
-__all__ : list[str] = ['MN_DATA_CHAN_NAME', 'MN_REQS_CHAN_NAME', 'MnManagerNodeC', 'BrokerClientC',
+__all__ = ['MN_DATA_CHAN_NAME', 'MN_REQS_CHAN_NAME', 'MnManagerNodeC', 'BrokerClientC',
                         'DbFacadeC']

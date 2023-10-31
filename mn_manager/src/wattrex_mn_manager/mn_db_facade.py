@@ -36,7 +36,7 @@ class DbFacadeC:
     '''
 
     def __init__(self) -> None:
-        self.db : DrvDbSqlEngineC  = DrvDbSqlEngineC(db_type=DrvDbTypeE.MASTER_DB,
+        self.database : DrvDbSqlEngineC  = DrvDbSqlEngineC(db_type=DrvDbTypeE.MASTER_DB,
                                                             config_file='.cred.yaml')
         self.last_cu_id = 0
 
@@ -50,7 +50,7 @@ class DbFacadeC:
         stmt = select(DrvDbComputationalUnitC.CUID)\
                         .order_by(DrvDbComputationalUnitC.CUID.desc())\
                         .limit(1)
-        res = self.db.session.execute(stmt).first()
+        res = self.database.session.execute(stmt).first()
         if res is not None:
             self.last_cu_id = res[0]
 
@@ -65,10 +65,10 @@ class DbFacadeC:
         stmt = select(DrvDbComputationalUnitC.CUID)\
                         .filter(DrvDbComputationalUnitC.Available == DrvDbAvailableCuE.ON.value)\
                         .order_by(DrvDbComputationalUnitC.CUID.asc())
-        res = self.db.session.execute(stmt).fetchall()
+        res = self.database.session.execute(stmt).fetchall()
         cus = []
-        for cu in res:
-            cus.append(cu[0])
+        for c_unit in res:
+            cus.append(c_unit[0])
         return cus
 
 
@@ -88,19 +88,19 @@ class DbFacadeC:
         cu_db.Port = cu_info.port
         cu_db.LastConnection = datetime.utcnow()
         cu_db.Available = DrvDbAvailableCuE.ON.value
-        self.db.session.add(cu_db)
+        self.database.session.add(cu_db)
 
 
-    def update_heartbeat(self, hb : CommDataHeartbeatC) -> None:
+    def update_heartbeat(self, heartbeat : CommDataHeartbeatC) -> None:
         '''Update the commData of the commdata.
 
         Args:
             hb (CommDataHeartbeatC): [description]
         '''
         stmt = update(DrvDbComputationalUnitC)\
-                        .where(DrvDbComputationalUnitC.CUID == hb.cu_id)\
-                        .values(LastConnection= hb.timestamp)
-        self.db.session.execute(stmt)
+                        .where(DrvDbComputationalUnitC.CUID == heartbeat.cu_id)\
+                        .values(LastConnection= heartbeat.timestamp)
+        self.database.session.execute(stmt)
 
 
     def update_devices(self, cu_id : int, devices : List[CommDataDeviceC]) -> None:
@@ -117,7 +117,7 @@ class DbFacadeC:
             db_dev.SN = d.serial_number
             db_dev.LinkName = d.link_name
             db_dev.ConnStatus = DrvDbConnStatusE.CONNECTED.value
-            self.db.session.add(db_dev)
+            self.database.session.add(db_dev)
             log.info(f"Adding device: {d.__dict__}")
             # TODO: add str for CommDataDeviceC
             # TODO: use add or update: depending if exists or not
@@ -135,6 +135,6 @@ class DbFacadeC:
         Raise:
             Exception: if there is an error during the commit.
         '''
-        self.db.commit_changes(raise_exception=True)
+        self.database.commit_changes(raise_exception=True)
 
 #######################            FUNCTIONS             #######################

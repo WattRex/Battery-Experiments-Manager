@@ -99,13 +99,13 @@ class MnManagerNodeC(SysShdNodeC): # pylint: disable=abstract-method
             log.debug(f"Inconsistent register message: {cu_info.msg_type}. Ignore it.")
 
 
-    def heartbeat_cb(self, hb : CommDataHeartbeatC) -> None:
+    def heartbeat_cb(self, heartbeat : CommDataHeartbeatC) -> None:
         '''Handle heartbeat data.
 
         Args:
             hb (CommDataHeartbeatC): [description]
         '''
-        self.db_facha.update_heartbeat(hb)
+        self.db_facha.update_heartbeat(heartbeat=heartbeat)
 
 
     def detect_devices_cb(self, cu_id : int, devices : List[CommDataDeviceC]) -> None:

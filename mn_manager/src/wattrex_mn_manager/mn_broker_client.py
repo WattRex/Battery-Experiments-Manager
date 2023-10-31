@@ -85,9 +85,9 @@ class BrokerClientC():
         Args:
             raw_data (bytearray): [description]
         '''
-        hb : CommDataHeartbeatC = loads(raw_data)
-        log.debug(f'Heartbeat received from: {hb.cu_id}')
-        self.__heartbeat_cb(hb)
+        heartbeat : CommDataHeartbeatC = loads(raw_data)
+        log.debug(f'Heartbeat received from: {heartbeat.cu_id}')
+        self.__heartbeat_cb(heartbeat)
 
 
     def process_det_dev(self, raw_data : bytearray) -> None:
