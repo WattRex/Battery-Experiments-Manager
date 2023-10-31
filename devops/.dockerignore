@@ -1,9 +1,0 @@
-venv/
-README.md
-docker-compose*
-.git/*
-.gitignore
-media/*
-dev_requirements.txt
-.idea/*
-static/images/graph_preview/*
