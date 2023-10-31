@@ -20,12 +20,12 @@ if __name__ == '__main__':
     cycler_logger = SysLogLoggerC(file_log_levels='../log_config.yaml')
 log: Logger = sys_log_logger_get_module_logger(__name__)
 
-#######################          MODULE IMPORTS          #######################
-
 #######################          PROJECT IMPORTS         #######################
 from wattrex_battery_cycler_datatypes.comm_data import CommDataCuC, CommDataRegisterTypeE,\
     CommDataHeartbeatC
 from wattrex_driver_mqtt import DrvMqttDriverC
+
+#######################          MODULE IMPORTS          #######################
 
 #######################              ENUMS               #######################
 _REGISTER_TOPIC = '/register'
@@ -143,6 +143,12 @@ class BrokerClientC():
         '''Process possible incoming messages.
         '''
         self.mqtt.process_data()
+
+
+    def close(self) -> None:
+        '''Close the broker client.
+        '''
+        self.mqtt.close()
 
 
 #######################            FUNCTIONS             #######################

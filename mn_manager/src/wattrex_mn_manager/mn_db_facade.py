@@ -6,10 +6,10 @@ Wrapper for the MQTT client
 
 #######################         GENERIC IMPORTS          #######################
 from typing import List
-from sqlalchemy.sql.expression import update, select
 from datetime import datetime
 
 #######################       THIRD PARTY IMPORTS        #######################
+from sqlalchemy.sql.expression import update, select
 
 #######################    SYSTEM ABSTRACTION IMPORTS    #######################
 from system_logger_tool import sys_log_logger_get_module_logger, SysLogLoggerC, Logger
@@ -20,10 +20,10 @@ if __name__ == '__main__':
 log: Logger = sys_log_logger_get_module_logger(__name__)
 
 #######################          MODULE IMPORTS          #######################
-from wattrex_battery_cycler_datatypes.comm_data import CommDataCuC, CommDataHeartbeatC,\
-    CommDataDeviceC
 
 #######################          PROJECT IMPORTS         #######################
+from wattrex_battery_cycler_datatypes.comm_data import CommDataCuC, CommDataHeartbeatC,\
+    CommDataDeviceC
 from wattrex_driver_db import DrvDbDetectedDeviceC, DrvDbSqlEngineC, DrvDbTypeE,\
                             DrvDbComputationalUnitC, DrvDbAvailableCuE, DrvDbConnStatusE
 

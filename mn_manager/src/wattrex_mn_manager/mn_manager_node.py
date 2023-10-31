@@ -18,16 +18,15 @@ if __name__ == '__main__':
     cycler_logger = SysLogLoggerC(file_log_levels='./log_config.yaml')
 log: Logger = sys_log_logger_get_module_logger(__name__)
 
-#######################          MODULE IMPORTS          #######################
-from .mn_broker_client import BrokerClientC
-from .mn_db_facade import DbFacadeC
-
+#######################          PROJECT IMPORTS         #######################
+from system_shared_tool import SysShdIpcChanC, SysShdNodeC
 from wattrex_battery_cycler_datatypes.comm_data import (CommDataCuC,CommDataRegisterTypeE,
                                                         CommDataHeartbeatC, CommDataDeviceC,
                                                         CommDataMnCmdDataC, CommDataMnCmdTypeE)
 
-#######################          PROJECT IMPORTS         #######################
-from system_shared_tool import SysShdIpcChanC, SysShdNodeC
+#######################          MODULE IMPORTS          #######################
+from .mn_broker_client import BrokerClientC
+from .mn_db_facade import DbFacadeC
 
 #######################              ENUMS               #######################
 MN_REQS_CHAN_NAME = 'mn_reqs'
@@ -35,7 +34,7 @@ MN_DATA_CHAN_NAME = 'mn_data'
 
 #######################             CLASSES              #######################
 
-class MnManagerNodeC(SysShdNodeC):
+class MnManagerNodeC(SysShdNodeC): # pylint: disable=abstract-method
     '''
     Cu Manager Class to instanciate a CU Manager Node
     '''
@@ -141,5 +140,11 @@ class MnManagerNodeC(SysShdNodeC):
         self.apply_cmds()
         self.db_facha.commit()
         self.client_mqtt.process_incomming_msg()
+
+
+    def stop(self) -> None:
+        '''Stop the stream .
+        '''
+        self.client_mqtt.close()
 
 #######################            FUNCTIONS             #######################
