@@ -110,15 +110,15 @@ class DbFacadeC:
             cu_id (int): [description]
             devices (List[CommDataDeviceC]): [description]
         '''
-        for d in devices:
+        for device in devices:
             db_dev = DrvDbDetectedDeviceC()
             db_dev.CUID = cu_id
-            db_dev.CompDevID = d.comp_dev_id
-            db_dev.SN = d.serial_number
-            db_dev.LinkName = d.link_name
+            db_dev.CompDevID = device.comp_dev_id
+            db_dev.SN = device.serial_number
+            db_dev.LinkName = device.link_name
             db_dev.ConnStatus = DrvDbConnStatusE.CONNECTED.value
             self.database.session.add(db_dev)
-            log.info(f"Adding device: {d.__dict__}")
+            log.info(f"Adding device: {device.__dict__}")
             # TODO: add str for CommDataDeviceC
             # TODO: use add or update: depending if exists or not
 
