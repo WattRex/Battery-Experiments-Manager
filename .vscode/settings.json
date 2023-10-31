@@ -25,7 +25,7 @@
     // ],
 
     "python.languageServer": "Pylance",
-    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.typeCheckingMode": "off",
     "files.trimTrailingWhitespace": true,
     "git.autofetch": true,
     "git.detectSubmodules": true,

@@ -54,17 +54,23 @@ class BrokerClientC():
         self.mqtt.subscribe(topic=_REGISTER_TOPIC, callback=self.process_register)
         self.mqtt.subscribe(topic=_INFORM_TOPIC, callback=self.process_register)
         for cu_id in avail_cus:
-            self.__subscribe_cu(cu_id)
+            self.__subscribe_cu(cu_id=cu_id)
 
 
     def __subscribe_cu(self, cu_id : int) -> None:
-        hb_topic = f'/{cu_id}{_SUFFIX_RX_HB}'
+        hb_topic: str = f'/{cu_id}{_SUFFIX_RX_HB}'
         self.mqtt.subscribe(topic=hb_topic, callback=self.process_heartbeat)
-        det_dev_topic = f'/{cu_id}{_SUFFIX_RX_DET_DEV}'
+        det_dev_topic: str = f'/{cu_id}{_SUFFIX_RX_DET_DEV}'
         self.mqtt.subscribe(topic=det_dev_topic, callback=self.process_det_dev)
 
 
     def process_register(self, raw_data : bytearray) -> None:
+        '''
+        Process the received data from the broker
+
+        Args:
+            raw_data (bytearray): Received data
+        '''
         cu_info = loads(raw_data)
         if isinstance(cu_info, CommDataCuC):
             log.info(f'Received register cmd: {cu_info.msg_type}')
@@ -74,12 +80,22 @@ class BrokerClientC():
 
 
     def process_heartbeat(self, raw_data : bytearray) -> None:
+        '''Process a heartbeat from the device.
+
+        Args:
+            raw_data (bytearray): [description]
+        '''
         hb : CommDataHeartbeatC = loads(raw_data)
         log.debug(f'Heartbeat received from: {hb.cu_id}')
         self.__heartbeat_cb(hb)
 
 
     def process_det_dev(self, raw_data : bytearray) -> None:
+        '''Process a device from a CUDA device.
+
+        Args:
+            raw_data (bytearray): [description]
+        '''
         # TODO: add cu_id to the message
         devices : List[CommDataDeviceC] = loads(raw_data)
         if len(devices) > 0:
@@ -90,24 +106,42 @@ class BrokerClientC():
             log.warning(f"No devices detected from any CU")
 
     def publish_inform(self, cu_info : CommDataCuC) -> None:
-        if cu_info.msg_type is CommDataRegisterTypeE.ACK:
-            self.__subscribe_cu(cu_info.cu_id)
+        '''Publish the inform data.
 
-        raw_cu = dumps(cu_info)
+        Args:
+            cu_info (CommDataCuC): [description]
+        '''
+        if cu_info.msg_type is CommDataRegisterTypeE.ACK:
+            self.__subscribe_cu(cu_id=cu_info.cu_id)
+
+        raw_cu: bytes = dumps(cu_info)
         self.mqtt.publish(topic=_INFORM_TOPIC, data=raw_cu)
 
 
     def publish_launch(self, cu_id : int, cs_id : int) -> None:
-        launch_topic = f'/{cu_id}{_SUFFIX_TX_LAUNCH}'
+        '''Publish a launch to the device.
+
+        Args:
+            cu_id (int): [description]
+            cs_id (int): [description]
+        '''
+        launch_topic: str = f'/{cu_id}{_SUFFIX_TX_LAUNCH}'
         self.mqtt.publish(topic=launch_topic, data=cs_id)
 
 
     def publish_req_devices(self, cu_id : int) -> None:
-        req_topic = f'/{cu_id}{_SUFFIX_TX_DET}'
+        '''Publish the request devices for the given cu_id.
+
+        Args:
+            cu_id (int): [description]
+        '''
+        req_topic: str = f'/{cu_id}{_SUFFIX_TX_DET}'
         self.mqtt.publish(topic=req_topic, data=cu_id)
 
 
     def process_incomming_msg(self) -> None:
+        '''Process possible incoming messages.
+        '''
         self.mqtt.process_data()
 
 

@@ -24,14 +24,16 @@ from wattrex_battery_cycler_datatypes.comm_data import CommDataCuC, CommDataHear
     CommDataDeviceC
 
 #######################          PROJECT IMPORTS         #######################
-from wattrex_driver_db import DrvDbDetectedDeviceC, DrvDbSqlEngineC, DrvDbTypeE, DrvDbComputationalUnitC,\
-    DrvDbAvailableCuE, DrvDbConnStatusE
+from wattrex_driver_db import DrvDbDetectedDeviceC, DrvDbSqlEngineC, DrvDbTypeE,\
+                            DrvDbComputationalUnitC, DrvDbAvailableCuE, DrvDbConnStatusE
 
 #######################              ENUMS               #######################
 
 #######################             CLASSES              #######################
 
 class DbFacadeC:
+    '''This function is used to create a DbFacade class for the Django backend .
+    '''
 
     def __init__(self) -> None:
         self.db : DrvDbSqlEngineC  = DrvDbSqlEngineC(db_type=DrvDbTypeE.MASTER_DB,
@@ -40,7 +42,14 @@ class DbFacadeC:
 
 
     def get_last_cu_id(self) -> int:
-        stmt = select(DrvDbComputationalUnitC.CUID).order_by(DrvDbComputationalUnitC.CUID.desc()).limit(1)
+        '''Get the CUDA CU ID for this simulation.
+
+        Returns:
+            int: [description]
+        '''
+        stmt = select(DrvDbComputationalUnitC.CUID)\
+                        .order_by(DrvDbComputationalUnitC.CUID.desc())\
+                        .limit(1)
         res = self.db.session.execute(stmt).first()
         if res is not None:
             self.last_cu_id = res[0]
@@ -48,9 +57,14 @@ class DbFacadeC:
         return self.last_cu_id
 
     def get_available_cus(self) -> List[int]:
-        stmt = select(DrvDbComputationalUnitC.CUID).filter(
-            DrvDbComputationalUnitC.Available == DrvDbAvailableCuE.ON.value).\
-                order_by(DrvDbComputationalUnitC.CUID.asc())
+        '''Returns a list of available CUDA units.
+
+        Returns:
+            List[int]: [description]
+        '''
+        stmt = select(DrvDbComputationalUnitC.CUID)\
+                        .filter(DrvDbComputationalUnitC.Available == DrvDbAvailableCuE.ON.value)\
+                        .order_by(DrvDbComputationalUnitC.CUID.asc())
         res = self.db.session.execute(stmt).fetchall()
         cus = []
         for cu in res:
@@ -59,6 +73,11 @@ class DbFacadeC:
 
 
     def register_cu(self, cu_info : CommDataCuC) -> None:
+        '''Register a CU data unit.
+
+        Args:
+            cu_info (CommDataCuC): [description]
+        '''
         log.info(f"Registering new CU: {cu_info}")
         self.last_cu_id += 1
         cu_db = DrvDbComputationalUnitC()
@@ -73,11 +92,24 @@ class DbFacadeC:
 
 
     def update_heartbeat(self, hb : CommDataHeartbeatC) -> None:
-        stmt = update(DrvDbComputationalUnitC).where(DrvDbComputationalUnitC.CUID == hb.cu_id).values(LastConnection= hb.timestamp)
+        '''Update the commData of the commdata.
+
+        Args:
+            hb (CommDataHeartbeatC): [description]
+        '''
+        stmt = update(DrvDbComputationalUnitC)\
+                        .where(DrvDbComputationalUnitC.CUID == hb.cu_id)\
+                        .values(LastConnection= hb.timestamp)
         self.db.session.execute(stmt)
 
 
     def update_devices(self, cu_id : int, devices : List[CommDataDeviceC]) -> None:
+        '''Update the list of devices in the database.
+
+        Args:
+            cu_id (int): [description]
+            devices (List[CommDataDeviceC]): [description]
+        '''
         for d in devices:
             db_dev = DrvDbDetectedDeviceC()
             db_dev.CUID = cu_id
@@ -91,14 +123,15 @@ class DbFacadeC:
             # TODO: use add or update: depending if exists or not
 
     def track_avail_cu(self) -> None:
-        pass
+        '''Track available CUs.
+        '''
         # TODO: implement this function
 
 
     def commit(self) -> None:
         '''
         Commit changes to the database.
-        
+
         Raise:
             Exception: if there is an error during the commit.
         '''
