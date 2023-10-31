@@ -46,7 +46,7 @@ class BrokerClientC():
                  inform_dev_cb : Callable, avail_cus : List[int]) -> None:
 
         self.mqtt : DrvMqttDriverC = DrvMqttDriverC(error_callback=error_callback,
-                                                    cred_path='.cred.mqtt.yaml')
+                                                    cred_path='.cred.yaml')
 
         self.__register_cb : Callable = register_cb
         self.__heartbeat_cb : Callable = heartbeat_cb

@@ -35,7 +35,7 @@ class DbFacadeC:
 
     def __init__(self) -> None:
         self.db : DrvDbSqlEngineC  = DrvDbSqlEngineC(db_type=DrvDbTypeE.MASTER_DB,
-                                                            config_file='.cred.db.yaml')
+                                                            config_file='.cred.yaml')
         self.last_cu_id = 0
 
 
@@ -96,6 +96,12 @@ class DbFacadeC:
 
 
     def commit(self) -> None:
-        self.db.commit_changes()
+        '''
+        Commit changes to the database.
+        
+        Raise:
+            Exception: if there is an error during the commit.
+        '''
+        self.db.commit_changes(raise_exception=True)
 
 #######################            FUNCTIONS             #######################
