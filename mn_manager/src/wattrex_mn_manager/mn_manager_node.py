@@ -19,7 +19,7 @@ if __name__ == '__main__':
 log: Logger = sys_log_logger_get_module_logger(__name__)
 
 #######################          PROJECT IMPORTS         #######################
-from system_shared_tool import SysShdIpcChanC, SysShdNodeC
+from system_shared_tool import SysShdIpcChanC, SysShdNodeC, SysShdNodeStatusE
 from wattrex_battery_cycler_datatypes.comm_data import (CommDataCuC,CommDataRegisterTypeE,
                                                         CommDataHeartbeatC, CommDataDeviceC,
                                                         CommDataMnCmdDataC, CommDataMnCmdTypeE)
@@ -68,6 +68,7 @@ class MnManagerNodeC(SysShdNodeC): # pylint: disable=abstract-method
             data ([type]): [description]
         '''
         log.critical(f'Error in Broker Client: {data}')
+        self.status = SysShdNodeStatusE.COMM_ERROR
 
 
     def register_cb(self, cu_info : CommDataCuC) -> None:

@@ -38,7 +38,7 @@ class DbFacadeC:
     def __init__(self) -> None:
         self.database : DrvDbSqlEngineC  = DrvDbSqlEngineC(db_type=DrvDbTypeE.MASTER_DB,
                                                             config_file='.cred.yaml')
-        self.last_cu_id = 0
+        self.last_cu_id = -1
 
 
     def get_last_cu_id(self) -> int:
@@ -104,23 +104,59 @@ class DbFacadeC:
 
 
     def update_devices(self, cu_id : int, devices : List[CommDataDeviceC]) -> None:
-        '''Update the list of devices in the database.
+        '''Add or Update the list of devices in the database.
 
         Args:
             cu_id (int): [description]
             devices (List[CommDataDeviceC]): [description]
         '''
+        select_stmt = select(DrvDbDetectedDeviceC)\
+                            .where(DrvDbDetectedDeviceC.CUID == cu_id)
+        res = self.database.session.execute(select_stmt).fetchall()
+        for db_dev in res:
+            db_dev : DrvDbDetectedDeviceC = db_dev[0]
+            db_dev.ConnStatus = DrvDbConnStatusE.DISCONNECTED.value
+            log.debug(f"Set device: {db_dev.__dict__} as disconnected")
+            update_stmt = update(DrvDbDetectedDeviceC)\
+                            .where(DrvDbDetectedDeviceC.CUID == db_dev.CUID)\
+                            .where(DrvDbDetectedDeviceC.CompDevID == db_dev.CompDevID)\
+                            .where(DrvDbDetectedDeviceC.SN == db_dev.SN)\
+                            .where(DrvDbDetectedDeviceC.LinkName == db_dev.LinkName)\
+                            .values(ConnStatus=DrvDbConnStatusE.DISCONNECTED.value)
+            self.database.session.execute(update_stmt)
+        msg = f"Setting as disconnected all devices in: {cu_id} to update only the connected ones"
+        log.info(msg)
+        self.commit()
         for device in devices:
-            db_dev = DrvDbDetectedDeviceC()
-            db_dev.CUID = cu_id
-            db_dev.CompDevID = device.comp_dev_id
-            db_dev.SN = device.serial_number
-            db_dev.LinkName = device.link_name
-            db_dev.ConnStatus = DrvDbConnStatusE.CONNECTED.value
-            self.database.session.add(db_dev)
-            log.info(f"Adding device: {device.__dict__}")
-            # TODO: add str for CommDataDeviceC
-            # TODO: use add or update: depending if exists or not
+            select_stmt = select(DrvDbDetectedDeviceC)\
+                            .where(DrvDbDetectedDeviceC.CUID == cu_id)\
+                            .where(DrvDbDetectedDeviceC.CompDevID == device.comp_dev_id)\
+                            .where(DrvDbDetectedDeviceC.SN == device.serial_number)\
+                            .where(DrvDbDetectedDeviceC.LinkName == device.link_name)
+            res = self.database.session.execute(select_stmt).first()
+            if res is not None:
+                db_dev : DrvDbDetectedDeviceC = res[0]
+                db_dev.ConnStatus = DrvDbConnStatusE.CONNECTED.value
+                log.info(f"Updating device: {device}")
+                update_stmt = update(DrvDbDetectedDeviceC)\
+                            .where(DrvDbDetectedDeviceC.CUID == cu_id)\
+                            .where(DrvDbDetectedDeviceC.CompDevID == device.comp_dev_id)\
+                            .where(DrvDbDetectedDeviceC.SN == device.serial_number)\
+                            .where(DrvDbDetectedDeviceC.LinkName == device.link_name)\
+                            .values(ConnStatus=DrvDbConnStatusE.CONNECTED.value)
+                self.database.session.execute(update_stmt)
+            else:
+                db_dev : DrvDbDetectedDeviceC = DrvDbDetectedDeviceC()
+                db_dev.CUID = cu_id
+                db_dev.CompDevID = device.comp_dev_id
+                db_dev.SN = device.serial_number
+                db_dev.LinkName = device.link_name
+                db_dev.ConnStatus = DrvDbConnStatusE.CONNECTED.value
+                log.info(f"Adding device: {device}")
+                self.database.session.add(db_dev)
+        log.info(f"Commiting add and/or update all devices in: {cu_id}")
+        self.commit()
+
 
     def track_avail_cu(self) -> None:
         '''Track available CUs.
