@@ -155,6 +155,7 @@ class DbFacadeC:
                 self.database.session.add(db_dev)
         log.info(f"Commiting add and/or update all devices in: {cu_id}")
         self.commit()
+        
 
     def track_avail_cu(self) -> None:
         '''Track available CUs.
