@@ -119,7 +119,7 @@ class DbFacadeC:
             db_dev.ConnStatus = DrvDbConnStatusE.CONNECTED.value
             self.database.session.add(db_dev)
             log.info(f"Adding device: {device.__dict__}")
-            # TODO: add str for CommDataDeviceC
+            log.info(f"Adding device: {device}")
             # TODO: use add or update: depending if exists or not
 
     def track_avail_cu(self) -> None:
