@@ -11,7 +11,15 @@ from django.core.files.storage import default_storage
 # from django.core.files.storage import FileSystemStorage
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
-                                
+
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from plotly import io as pio
+
+from wattrex_battery_cycler_datatypes.comm_data import CommDataMnCmdDataC, CommDataMnCmdTypeE
+from wattrex_mn_manager import MN_REQS_CHAN_NAME, MN_DATA_CHAN_NAME
+from system_shared_tool import SysShdIpcChanC
+
 from auto_lab.models import Alarm, Battery, Compatibledevices, Computationalunit, \
                                 Cyclerstation, Experiment, Extendedmeasures, Genericmeasures, \
                                 Instructions, Leadacid, Lithium, Profile, \
@@ -19,18 +27,9 @@ from auto_lab.models import Alarm, Battery, Compatibledevices, Computationalunit
                                 Usedmeasures, Availablemeasures, Detecteddevices
 from auto_lab.models_types import Technology_e, Chemistry_Lithium_e, Chemistry_LeadAcid_e, BipolarType_e, \
                          MembraneType_e, ElectrolyteType_e, DeviceType_e, Available_e, ExperimentStatus_e, \
-                         DeviceStatus_e, Mode_e, LimitType_e
+                         DeviceStatus_e, Mode_e, LimitType_e, ConnStatus_e
 from auto_lab.validator import ques
 from auto_lab.analyzer import analyzer, stringToInstructions
-
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-from plotly import io as pio
-
-from wattrex_battery_cycler_datatypes.comm_data import CommDataMnCmdDataC, CommDataMnCmdTypeE
-from system_shared_tool import SysShdIpcChanC
-
-from mn_manager import MN_REQS_CHAN_NAME, MN_DATA_CHAN_NAME
 
 # Global chan to communicate with the MN
 _MN_REQ_CHAN : SysShdIpcChanC = SysShdIpcChanC(name=MN_REQS_CHAN_NAME)
@@ -106,7 +105,7 @@ def form_submit_experiment(request):
                                     cs_id=Cyclerstation.objects.get(cs_id=form['expEquipment_input']),
                                     bat_id=Battery.objects.get(bat_id=form['expBattery_input']),
                                   )
-        
+
         if 'profile_instructions_write' in form or 'profile_instructions_upload' in form:
             profile_method = None
             if 'profile_instructions_write' in form:
@@ -115,7 +114,7 @@ def form_submit_experiment(request):
                 profile_method = 'upload'
             instructions = stringToInstructions(form['profile_instructions_'+profile_method])
             tmp_analyzer = analyzer(instructions)
-            
+
             newProfile = Profile(   name=form['profName_input_'+profile_method],
                                     description=form['profDescription_input_'+profile_method],
                                     volt_max=tmp_analyzer.volt_max,
@@ -129,7 +128,7 @@ def form_submit_experiment(request):
             for instr in instructions:
                 instr.prof_id = newProfile
             Instructions.objects.bulk_create(instructions)
-        
+
         elif 'expProfileSelected_input' in form:
             newExperiment.prof_id = Profile.objects.get(prof_id=form['expProfileSelected_input'])
         else:
@@ -144,7 +143,7 @@ def form_submit_experiment(request):
                                                     max_flow_rate = form['expElectrolyteMaxFlowRate_input'],
                                                   )
             newRedoxElectrolyte.save()
-        
+
     urlToBeRedirected = f'/'
     return redirect(urlToBeRedirected)
 
@@ -163,9 +162,9 @@ def form_import_experiment(request):
             instructions_given = False
 
         extended_measures_selected_names_and_id = {Measuresdeclaration.objects.get(meas_type=meas_type).meas_name.lower() : meas_type for meas_type in extended_measures_selected}
-        
+
         stored_time = time()
-        
+
         profilefile = request.FILES['file_upload']
         file_read = profilefile.read().decode('utf-8').splitlines()
         csv_reader = csv.reader(file_read, delimiter=',')
@@ -190,8 +189,8 @@ def form_import_experiment(request):
                         elif column == 'current':
                             generic_meas_csv_columns['current'] = row.index(column)
                         elif instructions_given and column == 'instr_id':
-                            generic_meas_csv_columns['instr_id'] = row.index(column)                            
-                        
+                            generic_meas_csv_columns['instr_id'] = row.index(column)
+
                 print(f'Column names are {", ".join(row)}')
             else:
                 try:
@@ -231,7 +230,7 @@ def form_import_experiment(request):
                                     cs_id=Cyclerstation.objects.get(name = "Virtual", cs_id = 1),
                                     bat_id=Battery.objects.get(bat_id=form['expBattery_input']),
                                   )
-        
+
         if 'profile_instructions_write' in form or 'profile_instructions_upload' in form:
             profile_method = None
             if 'profile_instructions_write' in form:
@@ -242,7 +241,7 @@ def form_import_experiment(request):
             if max_instr_id > len(instructions):
                 return HttpResponseBadRequest("<h1>Error 406 - Not Acceptable</h1><h3>Data in csv not valid</h3><img src='https://http.cat/400'>")
             tmp_analyzer = analyzer(instructions)
-            
+
             newProfile = Profile(   name=form['profName_input_'+profile_method],
                                     description=form['profDescription_input_'+profile_method],
                                     volt_max=tmp_analyzer.volt_max,
@@ -256,7 +255,7 @@ def form_import_experiment(request):
             for instr in instructions:
                 instr.prof_id = newProfile
             Instructions.objects.bulk_create(instructions)
-        
+
         elif 'expProfileSelected_input' in form:
             newExperiment.prof_id = Profile.objects.get(prof_id=form['expProfileSelected_input'])
             if max_instr_id > len(Instructions.objects.filter(prof_id=newExperiment.prof_id).values_list('instr_id', flat=True)):
@@ -293,7 +292,7 @@ def form_import_experiment(request):
                                                         value = int(float(row[ext_meas_csv_columns[meas_type]])*1000),
                                                     )
                     ext_meas_list.append(new_ext_meas)
-                
+
             line_count += 1
         _time = time()
         Genericmeasures.objects.bulk_create(generic_meas_list)
@@ -333,7 +332,7 @@ def form_submit_battery(request):
                                     chemistry = form['batChemistryLithium_input'],
                                 )
             newLithium.save()
-            
+
         elif newBattery.tech == 'LeadAcid':
             newLeadAcid = Leadacid( bat_id = newBattery,
                                     capacity = int(float(form['batCapacityLeadAcid_input'])*1000),
@@ -342,7 +341,7 @@ def form_submit_battery(request):
             newLeadAcid.save()
 
         elif newBattery.tech == 'RedoxStack':
-            newRedoxStack = Redoxstack( bat_id = newBattery, 
+            newRedoxStack = Redoxstack( bat_id = newBattery,
                                         electrode_size = int(float(form['redoxElectrodeSize_input'])*100),
                                         electrode_composition = form['redoxElectrodeComposition_input'],
                                         bipolar_type = BipolarType_e(form['redoxBipolarType_input']),
@@ -424,11 +423,11 @@ def experiments(request):
     profile_list = []
     for profile in Profile.objects.all():
         profile_list.append(profile)
-    
+
     experiments_list = []
     for experiment in Experiment.objects.all().select_related('cs_id', 'bat_id', 'prof_id'):
         experiments_list.append([experiment, experiment.cs_id.name, experiment.bat_id, experiment.prof_id.name])
-    
+
     context = {
         'battery_list': battery_list,
         'technology_list': technology_list,
@@ -449,8 +448,8 @@ def applyExperimentsFilters(request):
         'cycle_station': json.loads(post_dict['filters_cycle_station'][0]),
         'profile': json.loads(post_dict['filters_profile'][0]),
     }
-    
-    
+
+
     batteries = []
     if len(filters['battery']) > 0:
         if len(filters['technology']) > 0:
@@ -462,7 +461,7 @@ def applyExperimentsFilters(request):
             batteries = Battery.objects.filter(tech__in=filters['technology'])
         else:
             batteries = Battery.objects.all()
-    
+
     cycle_stations = []
     if len(filters['cycle_station']) > 0:
         cycle_stations = Cyclerstation.objects.filter(cs_id__in=filters['cycle_station'])
@@ -535,7 +534,7 @@ def getNewMeasures(request):
 
 def translateMeasuresNames(request):
     post_dict = dict(request.POST)
-    
+
     meas_names_list = json.loads(post_dict['measures_names'][0])
     exp_id = post_dict['exp_id']
     selected_experiment = Experiment.objects.get(exp_id=exp_id)
@@ -550,7 +549,7 @@ def translateMeasuresNames(request):
             meas_numeric_list.append(-1)
         else:
             meas_numeric_list.append(Measuresdeclaration.objects.get(meas_name=name).meas_type)
-    
+
     response = {
         'meas_numeric_list': meas_numeric_list
     }
@@ -602,7 +601,7 @@ def add_battery(request):
     models = set(models)
     electrodeCompositions = Redoxstack.objects.all().order_by('-bat_id').values_list('electrode_composition', flat=True)
     electrodeCompositions = set(electrodeCompositions)
-    
+
     context = {
         'technologies': technologies,
         'redox_stack': redox_stack,
@@ -833,8 +832,8 @@ def graphLive(exp_id_selected, time_window=300, only_data=False):
             #            zeroline=True, zerolinewidth=1, zerolinecolor='lightgrey'),
             title=dict(text='', x=0.5),
             margin=dict(l=50, r=50, b=50, t=50, pad=4),
-            font=dict(size=16),  
-            #font=dict(family='TeX Gyre Pagella',  size=16),  
+            font=dict(size=16),
+            #font=dict(family='TeX Gyre Pagella',  size=16),
             showlegend=True,
             legend=dict(
                 orientation="h",
@@ -851,14 +850,14 @@ def graphLive(exp_id_selected, time_window=300, only_data=False):
                                 )
                     ],
         )
-        
+
         config={
                 'toImageButtonOptions': {
                     'format': 'svg', 'filename': f"{fig.layout.title['text'].replace(' ','_')}", 'displaylogo': False
                     },
                 'responsive': True
                 }
-        
+
         return pio.to_html(fig, include_plotlyjs=True, full_html=False, div_id='graphLive', config=config)
 
 
@@ -884,8 +883,8 @@ def graphPreview(exp_id_selected, extended_measures_to_graph : bool = True, save
         columns = [col[0] for col in cursor.description]
 
         results = [dict(zip(columns, row)) for row in cursor.fetchall()]
-    
-    for result in results:    
+
+    for result in results:
         y_measures['voltage'].append(result['avg_voltage'])
         y_measures['current'].append(result['avg_current'])
         x_meas_id.append(result['first_block_row'])
@@ -912,9 +911,9 @@ def graphPreview(exp_id_selected, extended_measures_to_graph : bool = True, save
                 columns = [col[0] for col in cursor.description]
 
                 results = [dict(zip(columns, row)) for row in cursor.fetchall()]
-            
+
             y_measures[extended_measure_name] = [result_row['avg_meas'] for result_row in results]
-            
+
     print(f"Time elapsed retrieving data: {time() - time_start}")
 
     fig = make_subplots(specs=[[{"secondary_y": True}]])
@@ -949,14 +948,14 @@ def graphPreview(exp_id_selected, extended_measures_to_graph : bool = True, save
                 ),
                 secondary_y = True
             )
-        
+
     fig.update_xaxes(
         tickangle=-45,
         title_text='Duration (s)',
         ticksuffix='s',
     )
 
-    
+
 
     fig.update_yaxes(
         secondary_y = True,
@@ -989,7 +988,7 @@ def graphPreview(exp_id_selected, extended_measures_to_graph : bool = True, save
         #            zeroline=True, zerolinewidth=1, zerolinecolor='lightgrey'),
         title=dict(text='', x=0.5),
         margin=dict(l=50, r=50, b=50, t=50, pad=4),
-        font=dict(size=16),  
+        font=dict(size=16),
         showlegend=True,
         legend=dict(
             orientation="h",
@@ -1009,14 +1008,14 @@ def graphPreview(exp_id_selected, extended_measures_to_graph : bool = True, save
 
     if graph_font_family is not None:
         fig.update_layout(font=dict(family=graph_font_family))
-    
+
     config={
             'toImageButtonOptions': {
                 'format': 'svg', 'filename': f"{fig.layout.title['text'].replace(' ','_')}", 'displaylogo': False
                 },
             'responsive': True
             }
-    
+
     if save_img:
         if not os.path.exists(f"./static/images/graph_preview/exp_{exp_id_selected}.webp"):
             fig_to_save = fig
@@ -1038,13 +1037,13 @@ def graphPreview(exp_id_selected, extended_measures_to_graph : bool = True, save
 
     return pio.to_html(fig, include_plotlyjs=True, full_html=False, div_id='graphPreview', config=config)
     # return {'x' : x_meas_id, 'y' : y_measures}
-    
+
 
 def getCsv(request, exp_id_selected):
     response = HttpResponse(content_type = 'text/csv')
     response['Content-Disposition'] = 'attachment; filename="' + str(Experiment.objects.get(exp_id=exp_id_selected).name).capitalize().replace(" ", "_") + '(Measures).csv"'
     writer = csv.writer(response)
-    
+
     generic_measures = Genericmeasures.objects.filter(exp_id=exp_id_selected).order_by('meas_id')
     differnt_extended_measures = Extendedmeasures.objects.filter(exp_id=exp_id_selected).values_list('used_meas_id', flat=True).distinct()
     diff_ext_meas_list = []
@@ -1053,7 +1052,7 @@ def getCsv(request, exp_id_selected):
     diff_ext_meas_names = []
     for diff_meas in diff_ext_meas_list:
         diff_ext_meas_names.append(Usedmeasures.objects.get(used_meas_id=diff_meas).custom_name if Usedmeasures.objects.get(used_meas_id=diff_meas).custom_name != None else Usedmeasures.objects.get(used_meas_id=diff_meas).meas_type.meas_name)
-        
+
 
     headerRow = ['Timestamp', 'MeasID', 'Voltage', 'Current'] + diff_ext_meas_names #+ availableMagNamesOrdered
     writer.writerow(headerRow)
@@ -1077,7 +1076,7 @@ def getCsv(request, exp_id_selected):
                     print(f"No se encontró la meas_id({current_meas_id}) en {diff_ext_meas_names[diff_ext_meas_list.index(diff_meas)]}")
             # print(row)
             writer.writerow(row)
-    
+
     return response
 
 
@@ -1119,7 +1118,7 @@ def cycler_station(request):
     #     else:
     #         cu.available = Available_e.OFF
     #         cu.save()
-    
+
     context = {
         'cycler_stations': cycler_stations,
         'active_cu': active_cu,
@@ -1137,52 +1136,87 @@ def getCsOfCu(request):
 
 
 def getDetectedDevicesOfCu(request):
+    initial_time = time()
     post_dict = dict(request.POST)
     cu_id = post_dict['cu_id'][0]
-    active_cs_ids = Cyclerstation.objects.filter(cu_id=cu_id).filter(deprecated=False)
-    active_used_devices = Useddevices.objects.filter(cs_id__in=active_cs_ids)
-    detected_devices = Detecteddevices.objects.filter(cu_id=cu_id)
-    free_devices = detected_devices.exclude(dev_id__in=active_used_devices)
-
-    # print(f"Detected_devices: {detected_devices}")
-    # print(f"Used_devices: {active_used_devices}")
-    # print(f"Free_devices: {free_devices}")
-
     response = {}
-    for device in free_devices:
-        response[device.dev_id] = {'free': True, 'selected': False, 'sn': device.sn, 'name': device.comp_dev_id.name, 'device_type': device.comp_dev_id.device_type, 'available_measures': list(Availablemeasures.objects.filter(comp_dev_id=device.comp_dev_id).values('meas_type', 'meas_name'))}
-    for device in active_used_devices:
-        response[device.dev_id.dev_id] = {'free': False, 'selected': False, 'sn': device.dev_id.sn, 'name': device.dev_id.comp_dev_id.name, 'device_type': device.dev_id.comp_dev_id.device_type, 'available_measures': list(Availablemeasures.objects.filter(comp_dev_id=device.dev_id.comp_dev_id).values('meas_type', 'meas_name'))}
+    http_response : HttpResponse = requestRefreshDevices(request)
+    http_response_dict = json.loads(http_response.content)
+    if http_response_dict['status'] == 'OK':
+        active_cs_ids = Cyclerstation.objects.filter(cu_id=cu_id).filter(deprecated=False)
+        active_used_devices = Useddevices.objects.filter(cs_id__in=active_cs_ids)
+        detected_devices = Detecteddevices.objects.filter(cu_id=cu_id).filter(conn_status=ConnStatus_e.CONNECTED.value)
+        free_devices = detected_devices.exclude(dev_id__in=active_used_devices)
 
-    if 'cs_id' in post_dict and post_dict['cs_id'][0] != "":
-        cs_id = post_dict['cs_id'][0]
-        cs_used_devices = Useddevices.objects.filter(cs_id=cs_id)
-        for device in cs_used_devices:
-            response[device.dev_id.dev_id]['free'] = True
-            response[device.dev_id.dev_id]['selected'] = True
-            for meas in response[device.dev_id.dev_id]['available_measures']:
-                used_meas = Usedmeasures.objects.filter(cs_id=cs_id).filter(dev_id=device.dev_id.dev_id).filter(meas_type=meas['meas_type'])
-                if len(used_meas) > 0:
-                    meas['selected'] = True
-                    meas['custom_name'] = used_meas[0].custom_name
-                else:
-                    meas['selected'] = False
-                    meas['custom_name'] = None
+        # print(f"Detected_devices: {detected_devices}")
+        # print(f"Used_devices: {active_used_devices}")
+        # print(f"Free_devices: {free_devices}")
+
+        for device in free_devices:
+            response[device.dev_id] = {'free': True, 'selected': False, 'sn': device.sn, 'name': device.comp_dev_id.name, 'device_type': device.comp_dev_id.device_type, 'available_measures': list(Availablemeasures.objects.filter(comp_dev_id=device.comp_dev_id).values('meas_type', 'meas_name'))}
+        for device in active_used_devices:
+            response[device.dev_id.dev_id] = {'free': False, 'selected': False, 'sn': device.dev_id.sn, 'name': device.dev_id.comp_dev_id.name, 'device_type': device.dev_id.comp_dev_id.device_type, 'available_measures': list(Availablemeasures.objects.filter(comp_dev_id=device.dev_id.comp_dev_id).values('meas_type', 'meas_name'))}
+
+        if 'cs_id' in post_dict and post_dict['cs_id'][0] != "":
+            cs_id = post_dict['cs_id'][0]
+            cs_used_devices = Useddevices.objects.filter(cs_id=cs_id)
+            for device in cs_used_devices:
+                response[device.dev_id.dev_id]['free'] = True
+                response[device.dev_id.dev_id]['selected'] = True
+                for meas in response[device.dev_id.dev_id]['available_measures']:
+                    used_meas = Usedmeasures.objects.filter(cs_id=cs_id).filter(dev_id=device.dev_id.dev_id).filter(meas_type=meas['meas_type'])
+                    if len(used_meas) > 0:
+                        meas['selected'] = True
+                        meas['custom_name'] = used_meas[0].custom_name
+                    else:
+                        meas['selected'] = False
+                        meas['custom_name'] = None
 
 
-            # tmp_selected_measures = Usedmeasures.objects.filter(cs_id=cs_id).filter(dev_id=device.dev_id.dev_id)
+                # tmp_selected_measures = Usedmeasures.objects.filter(cs_id=cs_id).filter(dev_id=device.dev_id.dev_id)
 
-            # response[device.dev_id.dev_id]['selected_measures'] = []
-            # for meas in tmp_selected_measures:
-            #     response[device.dev_id.dev_id]['selected_measures'].append({'meas_type': meas.meas_type.meas_type, 'used_meas_id': meas.used_meas_id, 'meas_name': meas.meas_type.meas_name, 'custom_name': meas.custom_name})
-
+                # response[device.dev_id.dev_id]['selected_measures'] = []
+                # for meas in tmp_selected_measures:
+                #     response[device.dev_id.dev_id]['selected_measures'].append({'meas_type': meas.meas_type.meas_type, 'used_meas_id': meas.used_meas_id, 'meas_name': meas.meas_type.meas_name, 'custom_name': meas.custom_name})
+    else:
+        print(http_response_dict['message'])
+    elapsed_time = time() - initial_time
+    print(f"Elapsed time: {elapsed_time}")
     return HttpResponse(json.dumps(response))
 
 
 def _launch_cs(cu_id, cs_id) -> None:
     print(f'Launching CS ({cs_id}) on CU ({cu_id})...')
     cmd_to_mn_manager = CommDataMnCmdDataC(CommDataMnCmdTypeE.LAUNCH, cu_id, cs_id = cs_id)
-    _MN_REQ_CHAN.send(cmd_to_mn_manager)
+    _MN_REQ_CHAN.send_data(cmd_to_mn_manager)
+
+
+def requestRefreshDevices(request) -> HttpResponse:
+    TIMEOUT = 20
+    post_dict = dict(request.POST)
+    response = HttpResponse(json.dumps({'status': 'OK'}))
+    if 'cu_id' in post_dict:
+        cu_id = int(post_dict['cu_id'][0])
+        print(f'Requesting refresh devices of CU: ...')
+        cmd_to_mn_manager = CommDataMnCmdDataC(CommDataMnCmdTypeE.REQ_DETECT, cu_id)
+        _MN_REQ_CHAN.send_data(cmd_to_mn_manager)
+        try:
+            refresh_confirm : CommDataMnCmdDataC = _MN_DATA_CHAN.receive_data(timeout=TIMEOUT)
+        except Exception as err:
+            print(f'Error receiving refresh confirm: {err}')
+            response = HttpResponse(json.dumps({'status': 'ERROR', 'message': 'Error receiving refresh confirm (timeout)'}))
+        else:
+            # TODO: Check if the response is the expected for exactly this request
+            if refresh_confirm.cmd_type == CommDataMnCmdTypeE.INF_DEV:
+                print(f'Refresh confirm received!')
+            else:
+                print(f'Unexpected response: {refresh_confirm}')
+                response = HttpResponse(json.dumps({'status': 'ERROR', 'message': 'Unexpected response'}))
+        
+    else:
+        response = HttpResponse(json.dumps({'status': 'ERROR', 'message': 'No cu_id provided'}))
+
+    return response
 
 
 def addNewCs(request):
@@ -1245,7 +1279,7 @@ def modifyCs(request):
     new_used_devices = []
     for device in selected_devices:
         new_used_devices.append(Useddevices.objects.create(cs_id=new_cs,
-                                                           dev_id=Detecteddevices.objects.get(dev_id=device['dev_id']),))
+                                                                    dev_id=Detecteddevices.objects.get(dev_id=device['dev_id']),))
     # new_used_devices = Useddevices.objects.bulk_create(new_used_devices)
     for dev in new_used_devices:
         try:
@@ -1266,6 +1300,8 @@ def modifyCs(request):
             meas.save()
         except Exception as e:
             print(e)
+
+    _launch_cs(cu_id, new_cs.cs_id)
 
     return HttpResponse(json.dumps({'status': 'OK'}))
 

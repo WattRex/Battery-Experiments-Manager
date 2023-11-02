@@ -132,7 +132,7 @@ class Detecteddevices(models.Model):
     comp_dev_id = models.ForeignKey(Compatibledevices, models.DO_NOTHING, db_column='CompDevID')  # Field name made lowercase.
     sn = models.CharField(db_column='SN', max_length=30)  # Field name made lowercase.
     link_name = models.CharField(db_column='LinkName', max_length=30)  # Field name made lowercase.
-    conn_status = models.CharField(db_column='ConnStatus', max_length=12)  # Field name made lowercase.
+    conn_status = models.CharField(db_column='ConnStatus', max_length=12, choices=ConnStatus_e.choices)  # Field name made lowercase.
 
     class Meta:
         managed = False
