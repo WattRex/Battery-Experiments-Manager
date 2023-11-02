@@ -38,7 +38,7 @@ class DbFacadeC:
     def __init__(self) -> None:
         self.database : DrvDbSqlEngineC  = DrvDbSqlEngineC(db_type=DrvDbTypeE.MASTER_DB,
                                                             config_file='.cred.yaml')
-        self.last_cu_id = 0
+        self.last_cu_id = -1
 
 
     def get_last_cu_id(self) -> int:
