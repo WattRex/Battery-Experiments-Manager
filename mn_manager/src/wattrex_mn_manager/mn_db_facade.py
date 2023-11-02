@@ -124,7 +124,8 @@ class DbFacadeC:
                             .where(DrvDbDetectedDeviceC.LinkName == db_dev.LinkName)\
                             .values(ConnStatus=DrvDbConnStatusE.DISCONNECTED.value)
             self.database.session.add(update_stmt)
-        log.info(f"Setting as disconnected all devices in: {cu_id} to update only the connected ones")
+        log.info(f"Setting as disconnected all devices in: {cu_id} "
+                    + "to update only the connected ones")
         self.commit()
         for device in devices:
             select_stmt = select(DrvDbDetectedDeviceC)\
@@ -155,7 +156,7 @@ class DbFacadeC:
                 self.database.session.add(db_dev)
         log.info(f"Commiting add and/or update all devices in: {cu_id}")
         self.commit()
-        
+
 
     def track_avail_cu(self) -> None:
         '''Track available CUs.
