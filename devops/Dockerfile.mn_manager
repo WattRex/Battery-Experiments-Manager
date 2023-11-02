@@ -11,7 +11,7 @@ ENV PYTHONUNBUFFERED 1
 RUN mkdir /code
 WORKDIR /code
 
-ARG CACHE=2
+ARG CACHE=1
 ADD ./requirements_mn_manager.txt /code/
 RUN pip install --upgrade pip
 RUN pip install -r requirements_mn_manager.txt
