@@ -124,8 +124,8 @@ class DbFacadeC:
                             .where(DrvDbDetectedDeviceC.LinkName == db_dev.LinkName)\
                             .values(ConnStatus=DrvDbConnStatusE.DISCONNECTED.value)
             self.database.session.add(update_stmt)
-        log.info(f"Setting as disconnected all devices in: {cu_id} "
-                    + "to update only the connected ones")
+        log.info("Setting as disconnected all devices in: %s to update only the connected ones",
+                                                        cu_id)
         self.commit()
         for device in devices:
             select_stmt = select(DrvDbDetectedDeviceC)\
