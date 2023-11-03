@@ -108,6 +108,7 @@ create table if not exists LinkConfiguration
 create table if not exists ComputationalUnit
 (
     CUID            mediumint       unsigned    not null    auto_increment,
+    MAC             varchar(30)                 not null,
     HostName        varchar(50)                 not null,
     IP              varchar(20)                 not null,
     Port            smallint        unsigned    not null,

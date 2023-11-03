@@ -99,17 +99,18 @@ class Linkconfiguration(models.Model):
 
 class Computationalunit(models.Model):
     cu_id = models.AutoField(db_column='CUID', primary_key=True)  # Field name made lowercase.
+    mac = models.CharField(db_column='MAC', max_length=30)  # Field name made lowercase.
     host_name = models.CharField(db_column='HostName', max_length=50)  # Field name made lowercase.
     ip = models.CharField(db_column='IP', max_length=20)  # Field name made lowercase.
     port = models.PositiveSmallIntegerField(db_column='Port')  # Field name made lowercase.
-    user = models.CharField(db_column='User', max_length=20)  # Field name made lowercase.
+    user = models.CharField(db_column='User', max_length=30)  # Field name made lowercase.
     last_connection = models.DateTimeField(db_column='LastConnection')  # Field name made lowercase.
     available = models.CharField(db_column='Available', max_length=3, choices=Available_e.choices)  # Field name made lowercase.
 
     class Meta:
         managed = False
         db_table = 'ComputationalUnit'
-        unique_together = (('host_name', 'ip', 'port'),)
+        unique_together = (('mac', 'host_name', 'ip', 'port'),)
 
 
 class Cyclerstation(models.Model):
