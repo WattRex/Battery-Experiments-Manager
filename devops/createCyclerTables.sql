@@ -333,7 +333,7 @@ create table if not exists GenericMeasures
     InstrID         mediumint       unsigned    not null,
     Voltage         mediumint       unsigned    not null,
     Current         mediumint                   not null,
-    Power           mediumint                   not null,
+    Power           int                   not null,
     PowerMode       enum ('DISABLE', 'WAIT', 'CC_MODE', 'CV_MODE', 'CP_MODE') not null,
 
     constraint GenericMeasures_pk_1
@@ -364,7 +364,7 @@ create table if not exists ExtendedMeasures
 );
 
 INSERT INTO CompatibleDevices(Name, Manufacturer, Model, DeviceType, MinSWVersion, VoltMin, VoltMax, CurrMin, CurrMax) VALUES ('Virtual', 'Undefined', 'Undefined', 'BiSource', 0, 0, 9999999, -999999, 999999);
-INSERT INTO ComputationalUnit(HostName, IP, Port, User, LastConnection, Available) VALUES ('Virtual', '127.0.0.1', 6969, 'basic_user', NOW(), 'ON');
+INSERT INTO ComputationalUnit(MAC, HostName, IP, Port, User, LastConnection, Available) VALUES ('0x000000000000', 'Virtual', '127.0.0.1', 6969, 'basic_user', NOW(), 'ON');
 INSERT INTO CyclerStation(CUID, Name, Location, RegisterDate, Deprecated) VALUES (1, 'Virtual', 'Undefined', NOW(), 0);
 INSERT INTO DetectedDevices(CUID, CompDevID, SN, LinkName, ConnStatus) VALUES (1, 1, 'Virtual', 'Virtual', 'CONNECTED');
 INSERT INTO UsedDevices(CSID, DevID) VALUES (1, 1);

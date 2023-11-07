@@ -8,7 +8,7 @@ services:
     ports:
       - "3369:3306"
     volumes:
-      - wattrex_db_data:/var/lib/mysql
+      - wattrex_db_data_dev:/var/lib/mysql
       - ./createCyclerTables.sql:/docker-entrypoint-initdb.d/createCyclerTables.sql
     env_file:
       - .cred.env
@@ -52,5 +52,5 @@ services:
 
 
 volumes:
-  wattrex_db_data:
-    name: wattrex_db_data
+  wattrex_db_data_dev:
+    name: wattrex_db_data_dev
