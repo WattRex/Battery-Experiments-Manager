@@ -6,7 +6,7 @@ Wrapper for the MQTT client
 from __future__ import annotations
 #######################         GENERIC IMPORTS          #######################
 from typing import List
-from datetime import datetime
+from datetime import datetime, timedelta
 
 #######################       THIRD PARTY IMPORTS        #######################
 from sqlalchemy.sql.expression import update, select
@@ -29,7 +29,7 @@ from wattrex_driver_db import DrvDbDetectedDeviceC, DrvDbSqlEngineC, DrvDbTypeE,
 
 #######################              ENUMS               #######################
 
-TIMEOUT_BETWEEN_CONNECTIONS=15*1000 # 15 ms
+TIMEOUT_BETWEEN_CONNECTIONS=15 # 15s
 
 #######################             CLASSES              #######################
 
@@ -39,7 +39,7 @@ class DbFacadeC:
 
     def __init__(self) -> None:
         self.database : DrvDbSqlEngineC  = DrvDbSqlEngineC(db_type=DrvDbTypeE.MASTER_DB,
-                                                            config_file='.cred.yaml')
+                                            config_file='./devops/mn_manager/.cred.yaml')
         self.last_cu_id = -1
 
 
@@ -204,15 +204,18 @@ class DbFacadeC:
         '''
         # Update DrvDbComputationalUnitC.Available if elapsed time from LastConnection
         # is less than the defined constant
+        last_ts_allowed = datetime.utcnow() - timedelta(seconds=TIMEOUT_BETWEEN_CONNECTIONS)
+
         stmt_put_off = update(DrvDbComputationalUnitC)\
             .where(DrvDbComputationalUnitC.Available==DrvDbAvailableCuE.ON.value,\
-                datetime.utcnow() - DrvDbComputationalUnitC.LastConnection > \
-                TIMEOUT_BETWEEN_CONNECTIONS).values(Available=DrvDbAvailableCuE.OFF.value)
+                DrvDbComputationalUnitC.LastConnection < last_ts_allowed)\
+            .values(Available=DrvDbAvailableCuE.OFF.value)
 
         stmt_put_on = update(DrvDbComputationalUnitC)\
             .where(DrvDbComputationalUnitC.Available==DrvDbAvailableCuE.OFF.value,\
-                datetime.utcnow() - DrvDbComputationalUnitC.LastConnection < \
-                TIMEOUT_BETWEEN_CONNECTIONS).values(Available=DrvDbAvailableCuE.ON.value)
+                DrvDbComputationalUnitC.LastConnection > last_ts_allowed)\
+            .values(Available=DrvDbAvailableCuE.ON.value)
+
         self.database.session.execute(stmt_put_off)
         self.database.session.execute(stmt_put_on)
 

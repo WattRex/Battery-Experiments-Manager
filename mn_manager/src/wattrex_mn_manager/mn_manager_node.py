@@ -151,7 +151,9 @@ class MnManagerNodeC(SysShdNodeC): # pylint: disable=abstract-method
     def process_iteration(self) -> None:
         '''Perform a single iteration of the protocol.
         '''
+        log.debug("New Processing iteration")
         self.apply_cmds()
+        self.db_facha.track_avail_cu()
         self.db_facha.commit()
         self.client_mqtt.process_incomming_msg()
 

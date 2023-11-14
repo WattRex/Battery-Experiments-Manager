@@ -9,7 +9,7 @@ services:
       - "3369:3306"
     volumes:
       - wattrex_db_data_dev:/var/lib/mysql
-      - ./createCyclerTables.sql:/docker-entrypoint-initdb.d/createCyclerTables.sql
+      - ./createMasterCyclerTables.sql:/docker-entrypoint-initdb.d/createMasterCyclerTables.sql
     env_file:
       - .cred.env
 
@@ -22,8 +22,8 @@ services:
     restart: always
     ipc: host
     volumes:
-      - ../mn_manager/log_config.yaml:/code/log_config.yaml
-      - ../mn_manager/.cred.yaml:/code/tests/.cred.yaml
+      - ./mn_manager/log_config.yaml:/code/devops/mn_manager/log_config.yaml
+      - ./mn_manager/.cred.yaml:/code/devops/mn_manager/.cred.yaml
     env_file:
       - .cred.env
     depends_on:

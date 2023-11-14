@@ -12,6 +12,8 @@ config.*
 *.yml
 *__version__.py
 .github/
+venv*
+static/images/graph_preview/*
 
 
 ### Software IDEAS ###
