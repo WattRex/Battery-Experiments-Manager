@@ -3,7 +3,7 @@
 Wrapper for the MQTT client
 """
 #######################        MANDATORY IMPORTS         #######################
-
+from __future__ import annotations
 #######################         GENERIC IMPORTS          #######################
 from typing import List
 from datetime import datetime
@@ -28,6 +28,8 @@ from wattrex_driver_db import DrvDbDetectedDeviceC, DrvDbSqlEngineC, DrvDbTypeE,
                             DrvDbComputationalUnitC, DrvDbAvailableCuE, DrvDbConnStatusE
 
 #######################              ENUMS               #######################
+
+TIMEOUT_BETWEEN_CONNECTIONS=15*1000 # 15 ms
 
 #######################             CLASSES              #######################
 
@@ -197,10 +199,22 @@ class DbFacadeC:
 
 
     def track_avail_cu(self) -> None:
-        '''Track available CUs.
         '''
-        # TODO: implement this function
+        Track available CUs.
+        '''
+        # Update DrvDbComputationalUnitC.Available if elapsed time from LastConnection
+        # is less than the defined constant
+        stmt_put_off = update(DrvDbComputationalUnitC)\
+            .where(DrvDbComputationalUnitC.Available==DrvDbAvailableCuE.ON.value,\
+                datetime.utcnow() - DrvDbComputationalUnitC.LastConnection > \
+                TIMEOUT_BETWEEN_CONNECTIONS).values(Available=DrvDbAvailableCuE.OFF.value)
 
+        stmt_put_on = update(DrvDbComputationalUnitC)\
+            .where(DrvDbComputationalUnitC.Available==DrvDbAvailableCuE.OFF.value,\
+                datetime.utcnow() - DrvDbComputationalUnitC.LastConnection < \
+                TIMEOUT_BETWEEN_CONNECTIONS).values(Available=DrvDbAvailableCuE.ON.value)
+        self.database.session.execute(stmt_put_off)
+        self.database.session.execute(stmt_put_on)
 
     def commit(self) -> None:
         '''
