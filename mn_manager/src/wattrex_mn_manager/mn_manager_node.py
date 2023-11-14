@@ -78,24 +78,37 @@ class MnManagerNodeC(SysShdNodeC): # pylint: disable=abstract-method
             cu_info (CommDataCuC): [description]
         '''
         if cu_info.msg_type is CommDataRegisterTypeE.DISCOVER:
-            new_cu_id = self.db_facha.get_last_cu_id()
-            # TODO: Check if the same device with the same MAC is already registered
-            cu_info.cu_id = new_cu_id + 1
-            cu_info.msg_type = CommDataRegisterTypeE.OFFER
-            log.info(f"{cu_info.msg_type.name}s cu_id {cu_info.cu_id} for device with MAC:"
-                     + f"{cu_info.mac}")
+            found_cu = self.db_facha.get_cu_by_mac(cu_info.mac)
+            if found_cu is not None:
+                cu_info.cu_id = found_cu
+                cu_info.msg_type = CommDataRegisterTypeE.OFFER
+                log.info(f"{cu_info.msg_type.name}s cu_id {cu_info.cu_id} for device already "
+                        + "found in database with MAC:"
+                        + f"{cu_info.mac}")
+            else:
+                new_cu_id = self.db_facha.get_last_cu_id()
+                cu_info.cu_id = new_cu_id + 1
+                cu_info.msg_type = CommDataRegisterTypeE.OFFER
+                log.info(f"{cu_info.msg_type.name}s cu_id {cu_info.cu_id} for device with MAC:"
+                        + f"{cu_info.mac}")
             self.client_mqtt.publish_inform(cu_info)
         elif cu_info.msg_type is CommDataRegisterTypeE.REQUEST:
-            self.db_facha.register_cu(cu_info)
-            try:
-                self.db_facha.commit()
-            except Exception as err:
-                log.error(f"Error on commiting new CU: {err}")
-            else:
+            if self.db_facha.is_cu_registered(cu_info):
                 cu_info.msg_type = CommDataRegisterTypeE.ACK
-                log.info(f"Send {cu_info.msg_type.name}. Registered new CU: {cu_info.cu_id} "
-                         + f"with MAC: {cu_info.mac}")
+                log.info(f"Send {cu_info.msg_type.name}. Already registered CU: {cu_info.cu_id} "
+                            + f"with MAC: {cu_info.mac}")
                 self.client_mqtt.publish_inform(cu_info)
+            else:
+                self.db_facha.register_cu(cu_info)
+                try:
+                    self.db_facha.commit()
+                except Exception as err:
+                    log.error(f"Error on commiting new CU: {err}")
+                else:
+                    cu_info.msg_type = CommDataRegisterTypeE.ACK
+                    log.info(f"Send {cu_info.msg_type.name}. Registered new CU: {cu_info.cu_id} "
+                            + f"with MAC: {cu_info.mac}")
+                    self.client_mqtt.publish_inform(cu_info)
         else:
             log.debug(f"Inconsistent register message: {cu_info.msg_type}. Ignore it.")
 

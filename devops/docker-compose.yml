@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  wattrex_db:
+    image: mysql:8.0.31-debian
+    container_name: wattrex_master_db
+    restart: always
+    ports:
+      - "3369:3306"
+    volumes:
+      - wattrex_db_data_dev:/var/lib/mysql
+      - ./createCyclerTables.sql:/docker-entrypoint-initdb.d/createCyclerTables.sql
+    env_file:
+      - .cred.env
+
+  wattrex_mn_manager:
+    build:
+      context: ../
+      dockerfile: ./devops/Dockerfile.mn_manager
+    image: wattrex-mn-manager:0.0.1
+    container_name: wattrex_mn_manager
+    restart: always
+    ipc: host
+    volumes:
+      - ../mn_manager/log_config.yaml:/code/log_config.yaml
+      - ../mn_manager/.cred.yaml:/code/tests/.cred.yaml
+    env_file:
+      - .cred.env
+    depends_on:
+      - wattrex_db
+
+  wattrex_web_server:
+    build:
+      context: ../
+      dockerfile: ./devops/Dockerfile.web_server
+    image: wattrex-web-server:0.0.2
+    container_name: wattrex_web_server
+    restart: always
+    ports:
+      - "8869:8000"
+    ipc: host
+    volumes:
+      # - ./media/profiles:/code/media/profiles
+      - ../static:/code/static
+      - ../auto_lab:/code/auto_lab
+      - ../batteryCycling_project:/code/batteryCycling_project
+    env_file:
+      - .cred.env
+    depends_on:
+      - wattrex_db
+      - wattrex_mn_manager
+
+
+volumes:
+  wattrex_db_data_dev:
+    name: wattrex_db_data_dev

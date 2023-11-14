@@ -74,6 +74,43 @@ class DbFacadeC:
         return cus
 
 
+    def is_cu_registered(self, cu_info : CommDataCuC) -> bool:
+        '''Check if a CU is already registered.
+
+        Args:
+            cu_info (CommDataCuC): [description]
+
+        Returns:
+            bool: [description]
+        '''
+        result = False
+        stmt = select(DrvDbComputationalUnitC)\
+                        .where(DrvDbComputationalUnitC.MAC == cu_info.mac)
+        db_result = self.database.session.execute(stmt).first()
+        if db_result is not None:
+            result = True
+        return result
+
+
+    def get_cu_by_mac(self, mac : int) -> int|None:
+        '''Returns the CU_ID from database for the given mac address.
+        Returns None if not found.
+
+        Args:
+            mac (int): [description]
+        
+        Returns:
+            result (int|None): CU_ID retrieved from database. None if not found
+        '''
+        result : int = None
+        stmt = select(DrvDbComputationalUnitC)\
+                        .where(DrvDbComputationalUnitC.MAC == mac)
+        db_result = self.database.session.execute(stmt).first()
+        if db_result is not None:
+            result = DrvDbComputationalUnitC(db_result[0]).CUID
+        return result
+
+
     def register_cu(self, cu_info : CommDataCuC) -> None:
         '''Register a CU data unit.
 
@@ -84,6 +121,7 @@ class DbFacadeC:
         self.last_cu_id += 1
         cu_db = DrvDbComputationalUnitC()
         cu_db.CUID = self.last_cu_id
+        cu_db.MAC = cu_info.mac
         cu_db.HostName = cu_info.hostname
         cu_db.User = cu_info.user
         cu_db.IP = cu_info.ip
@@ -118,14 +156,14 @@ class DbFacadeC:
         for db_dev in res:
             db_dev : DrvDbDetectedDeviceC = db_dev[0]
             db_dev.ConnStatus = DrvDbConnStatusE.DISCONNECTED.value
-            log.debug(f"Set device: {db_dev} as disconnected")
+            log.debug(f"Set device: {db_dev.__dict__} as disconnected")
             update_stmt = update(DrvDbDetectedDeviceC)\
                             .where(DrvDbDetectedDeviceC.CUID == db_dev.CUID)\
                             .where(DrvDbDetectedDeviceC.CompDevID == db_dev.CompDevID)\
                             .where(DrvDbDetectedDeviceC.SN == db_dev.SN)\
                             .where(DrvDbDetectedDeviceC.LinkName == db_dev.LinkName)\
                             .values(ConnStatus=DrvDbConnStatusE.DISCONNECTED.value)
-            self.database.session.add(update_stmt)
+            self.database.session.execute(update_stmt)
         msg = f"Setting as disconnected all devices in: {cu_id} to update only the connected ones"
         log.info(msg)
         self.commit()
@@ -146,7 +184,7 @@ class DbFacadeC:
                             .where(DrvDbDetectedDeviceC.SN == device.serial_number)\
                             .where(DrvDbDetectedDeviceC.LinkName == device.link_name)\
                             .values(ConnStatus=DrvDbConnStatusE.CONNECTED.value)
-                self.database.session.add(update_stmt)
+                self.database.session.execute(update_stmt)
             else:
                 db_dev : DrvDbDetectedDeviceC = DrvDbDetectedDeviceC()
                 db_dev.CUID = cu_id
