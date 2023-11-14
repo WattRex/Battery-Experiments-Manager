@@ -107,7 +107,8 @@ class DbFacadeC:
                         .where(DrvDbComputationalUnitC.MAC == mac)
         db_result = self.database.session.execute(stmt).first()
         if db_result is not None:
-            result = DrvDbComputationalUnitC(db_result[0]).CUID
+            query_result : DrvDbComputationalUnitC = db_result[0]
+            result = query_result.CUID
         return result
 
 
