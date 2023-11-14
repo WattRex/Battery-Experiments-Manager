@@ -1,0 +1,22 @@
+FROM python:3.9
+
+LABEL   org.opencontainers.image.authors="javiersanzmoline@gmail.com" \
+        org.opencontainers.image.title="Battery-Experiments-Manager" \
+        org.opencontainers.image.description="A python service to manage master node communicatin externaly through mqtt" \
+        org.opencontainers.image.url="https://github.com/WattRex/Battery-Experiments-Manager" \
+        org.opencontainers.image.source="https://github.com/WattRex/Battery-Experiments-Manager" \
+        org.opencontainers.image.licenses="GPL-3.0"
+
+ENV PYTHONUNBUFFERED 1
+RUN mkdir /code
+WORKDIR /code
+
+ARG CACHE=1
+ADD ./requirements_mn_manager.txt /code/
+RUN pip install --upgrade pip
+RUN pip install -r requirements_mn_manager.txt
+ADD ./mn_manager/ /code/
+
+WORKDIR /code/tests
+
+CMD ["python", "run.py"]

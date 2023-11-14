@@ -1,0 +1,645 @@
+{% extends "base.html" %}
+{% load static %}
+
+
+{% block page_content %}
+    <style>
+        #loading-screen {
+            background: #AAAAAA69;
+            opacity: 1;
+            height:100%;
+            position:absolute;
+            top:0px;
+            right:0px;
+            bottom:0px;
+            left:0px;
+            z-index:9999;
+            display: none;
+        }
+
+        #loading-screen div {
+            margin-left: 47%;
+            width: 100px;
+            height: 100px;
+            margin-top: 40vh;
+        }
+    </style>
+
+    <div id="loading-screen">
+        <div class="spinner-border text-secondary align-middle" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+    <div class="container-fluid">
+        <div class="bg-light mainPanel">
+            <form method="post" action="" enctype="multipart/form-data" name="mainForm" id="mainForm">
+                {% csrf_token %}
+                <div class="row marginBottom">
+                    <div class="col-lg-12 col-xl-12">
+                        <div class="row" >
+                            <nav class="col-12">
+                                <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                                  <button class="nav-link disabled" id="nav-title-tab" data-toggle="tab" type="button" role="tab" aria-controls="nav-home" aria-selected="true">Cycler Station</button>
+                                  <button onclick="blankDevices()" class="nav-link active" id="nav-add-tab" data-toggle="tab" data-target="#nav-add" type="button" role="tab" aria-controls="nav-add" aria-selected="true">Add new</button>
+                                  <button onclick="blankDevices()" class="nav-link" id="nav-modify-tab" data-toggle="tab" data-target="#nav-modify" type="button" role="tab" aria-controls="nav-modify" aria-selected="false">Modify</button>
+                                  <button onclick="blankDevices()" class="nav-link" id="nav-delete-tab" data-toggle="tab" data-target="#nav-delete" type="button" role="tab" aria-controls="nav-delete" aria-selected="false">Delete</button>
+                                </div>
+                            </nav>
+                            <div class="tab-content col-12" id="nav-tabContent">
+                                <!-- Cycler Station ADD NEW -->
+                                <div class="tab-pane tab-pane-cs fade show active" id="nav-add" role="tabpanel" aria-labelledby="nav-add-tab">
+                                    <div class="row" style="padding: 15px 20px 0px 20px;">
+                                        <div class="form-group col-12 col-md-4">
+                                            <label for="csCuAdd">Computational Unit</label>
+                                            <select name="csCuAdd_input" id="csCuAdd" class="selectInput marginBottom" data-title="Select..." data-live-search="true" data-width="100%" data-size="8" multiple data-max-options="1" required>
+                                                {% comment %} <option data-tokens="CU1" value="CU1" label="CU1">CU1</option> {% endcomment %}
+                                                {% for cu in active_cu %}
+                                                    <option data-tokens="{{ cu.host_name }}" value="{{ cu.cu_id }}" label="{{ cu.host_name }}">{{ cu.host_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-12 col-md-4">
+                                            <label for="csNameAdd">Cycler Station Name</label>
+                                            <input type="text" minlength="1" maxlength="30" class="form-control marginBottom" name="csNameAdd_input" id="csNameAdd" placeholder="" required>
+                                        </div>
+                                        <div class="form-group col-12 col-md-4">
+                                            <label for="csLocationAdd">Location</label>
+                                            <input type="text" minlength="1" maxlength="30" class="form-control marginBottom" name="csLocationAdd_input" id="csLocationAdd" placeholder="" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Cycler Station MODIFY  -->
+                                <div class="tab-pane tab-pane-cs fade" id="nav-modify" role="tabpanel" aria-labelledby="nav-modify-tab">
+                                    <div class="row" style="padding: 15px 20px 0px 20px;">
+                                        <div class="form-group col-12 col-md-4">
+                                            <label for="csCuModify">Computational Unit</label>
+                                            <select name="csCuModify_input" id="csCuModify" class="selectInput marginBottom" data-title="Select..." data-live-search="true" data-width="100%" data-size="8" multiple data-max-options="1" required>
+                                                {% for cu in active_cu %}
+                                                    <option data-tokens="{{ cu.host_name }}" value="{{ cu.cu_id }}" label="{{ cu.host_name }}">{{ cu.host_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-12 col-md-4">
+                                            <label for="csNameModify">Cycler Station</label>
+                                            <select name="csNameModify_input" id="csNameModify" class="selectInput marginBottom" data-title="Select..." data-live-search="true" data-width="100%" data-size="8" multiple data-max-options="1" required disabled>
+                                                <!-- Initially empty -->
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-12 col-md-4">
+                                            <label for="csLocationModify">Location</label>
+                                            <input type="text" minlength="1" maxlength="30" class="form-control marginBottom" name="csLocation_input" id="csLocationModify" placeholder="" required disabled>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Cycler Station DELETE -->
+                                <div class="tab-pane tab-pane-cs fade" id="nav-delete" role="tabpanel" aria-labelledby="nav-delete-tab">
+                                    <div class="row" style="padding: 15px 20px 0px 20px;">
+                                        <div class="form-group col-12 col-md-4">
+                                            <label for="csCuDelete">Computational Unit</label>
+                                            <select name="csCuDelete_input" id="csCuDelete" class="selectInput marginBottom" data-title="Select..." data-live-search="true" data-width="100%" data-size="8" multiple data-max-options="1" required>
+                                                {% for cu in active_cu %}
+                                                    <option data-tokens="{{ cu.host_name }}" value="{{ cu.cu_id }}" label="{{ cu.host_name }}">{{ cu.host_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-12 col-md-4">
+                                            <label for="csNameDelete">Cycler Station</label>
+                                            <select name="csNameDelete_input" id="csNameDelete" class="selectInput marginBottom" data-title="Select..." data-live-search="true" data-width="100%" data-size="8" multiple data-max-options="1" required disabled>
+                                                <!-- Initially empty -->
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-12 col-md-4">
+                                            <label for="csBtnDelete">&nbsp;</label>
+                                            <br>
+                                            <button type="button" id="csBtnDelete" class="btn btn-danger marginBottom">Delete</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row marginBottom">
+                    <div class="col-12">
+                        <div class="nav nav-tabs" id="nav-tab" role="tablist" style="border: 0px !important; line-height:10px;">
+                            <button class="nav-link disabled" id="nav-title-tab" data-toggle="tab" type="button" role="tab" aria-controls="nav-home" aria-selected="true">Select Devices</button>
+                            <button class="btn btn-primary" id="btnDeviceRefresh" type="button" style="height: 30px; line-height: 10px;" disabled>Refresh</button>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        {% comment %} <div class="devicePanel"> {% endcomment %}
+                            <div id="device-panel" class="row devicePanel">
+                                <div id="devices-selector" class="col-3 devices-selector">
+                                    
+                                    <!-- DEVICE EXAMPLE (selected and active are optional; Selected for blue check and active for measure display)
+                                    <div class="device selected active">
+                                        <div class="selected-icon">
+                                        </div>
+                                        <p>EPC 4</p>
+                                    </div>
+                                    -->
+
+                                </div>
+                                <div class="col-9 measures-selector" oncontextmenu="return false;">
+                                    <div id="measures-container" class="measures-container">
+                                        
+                                        <!-- MEASURE EXAMPLE
+                                        <div class="measure selected" data-meas-type="1">
+                                            <div class="selected-icon">
+                                            </div>
+                                            <div class="measure-text">
+                                                <p>Temp2</p>
+                                                <p hidden>&nbsp;→&nbsp;</p>
+                                                <p hidden>Temperatura ambiental</p>
+                                            </div>
+                                        </div>
+                                        -->
+
+                                    </div>
+                                </div>
+                            </div>
+                        {% comment %} </div> {% endcomment %}
+                    </div>
+
+                </div>
+
+                <div class="row">
+                    <div class="col-1 col-lg-7">
+                        <button type="button" id="btnSubmit" class="btn btn-primary" style="margin-bottom: 20px;">Submit</button>
+                    </div>
+                    
+
+                    <div class="col-11 col-lg-5">
+
+                    </div>
+                </div>
+
+            </form>
+
+
+        </div>
+    </div>
+
+    <script type="text/javascript" src="{% static 'bootstrap-select.min.js'%} "></script>   {#  https://developer.snapappointments.com/bootstrap-select/  #}
+
+    <script>
+  /* ___   ___   _   _   ___   _____  _____ ______  _____ ______  _____ 
+    |_  | / _ \ | | | | / _ \ /  ___|/  __ \| ___ \|_   _|| ___ \|_   _|
+      | |/ /_\ \| | | |/ /_\ \\ `--. | /  \/| |_/ /  | |  | |_/ /  | |  
+      | ||  _  || | | ||  _  | `--. \| |    |    /   | |  |  __/   | |  
+  /\__/ /| | | |\ \_/ /| | | |/\__/ /| \__/\| |\ \  _| |_ | |      | |  
+  \____/ \_| |_/ \___/ \_| |_/\____/  \____/\_| \_| \___/ \_|      \_/  */
+
+    const btnAddTab = document.getElementById("nav-add-tab");
+    const btnModifyTab = document.getElementById("nav-modify-tab");
+    const btnDeleteTab = document.getElementById("nav-delete-tab");
+
+    const csCuAdd = document.getElementById("csCuAdd");
+    $('#csCuAdd').selectpicker();
+    csCuAdd.addEventListener("change", refresh_devices_add);
+    const csCuModify = document.getElementById("csCuModify");
+    csCuModify.addEventListener("change", reload_cs_modify);
+    $('#csCuModify').selectpicker();
+    const csCuDelete = document.getElementById("csCuDelete");
+    csCuDelete.addEventListener("change", reload_cs_delete);
+    $('#csCuDelete').selectpicker();
+
+    const csNameModify = document.getElementById("csNameModify");
+    $('#csNameModify').selectpicker();
+    csNameModify.addEventListener("change", refresh_devices_modify);
+    const csLocationModify = document.getElementById("csLocationModify");
+
+    const csNameDelete = document.getElementById("csNameDelete");
+    $('#csNameDelete').selectpicker();
+
+    const btnDelete = document.getElementById("csBtnDelete");
+    btnDelete.addEventListener("click", delete_cs);
+
+    const btnRefresh = document.getElementById("btnDeviceRefresh");
+    btnRefresh.addEventListener("click", refresh_devices_btn);
+
+    const devicesSelector = document.getElementById("devices-selector");
+    const measuresContainer = document.getElementById("measures-container");
+
+    const btnSubmit = document.getElementById("btnSubmit");
+    btnSubmit.addEventListener("click", submit_form);
+
+    function get_cs_from_cu(cu_id) { // Return the new data for the selectpicker. It is called when the user changes the cu in the modify or delete tabs. cu_id has to be an int
+        let result = "";
+        $.ajax({
+            async: false,
+            type: "POST",
+            url: "{% url 'get-cs-of-cu' %}",
+            // contentType: "application/json; charset=utf-8",
+            data: { csrfmiddlewaretoken: '{{ csrf_token }}',
+                    cu_id: cu_id,
+                },
+            success:  function(response){
+                response = JSON.parse(response);
+                console.log(response);
+                result = response;
+            },
+        });
+        return result;
+    }
+
+    function reload_cs_modify() {
+        if (csCuModify.value != "") {
+            devicesSelector.innerHTML = "";
+            measuresContainer.innerHTML = "";
+            csLocationModify.value = "";
+            btnRefresh.disabled = true;
+            $('#csNameModify').prop('disabled', false);
+            csNameModify.innerHTML = "";
+            let cs_retrieved = get_cs_from_cu(csCuModify.value)
+            for (cs of cs_retrieved) {
+                csNameModify.innerHTML += '<option data-location="' + cs.location + '" data-tokens="' + cs.name + '" value="' + cs.cs_id + '" label="' + cs.name + '">' + cs.name + '</option>';
+            }
+            $('#csNameModify').selectpicker('refresh');
+        } else {
+            $('#csNameModify').prop('disabled', true);
+            csNameModify.innerHTML = "";
+            $('#csNameModify').selectpicker('refresh');
+        }
+    }
+
+    function reload_cs_delete() {
+        if (csCuDelete.value != "") {
+            $('#csNameDelete').prop('disabled', false);
+            csNameDelete.innerHTML = "";
+            let cs_retrieved = get_cs_from_cu(csCuDelete.value)
+            for (cs of cs_retrieved) {
+                csNameDelete.innerHTML += '<option data-tokens="' + cs.name + '" value="' + cs.cs_id + '" label="' + cs.name + '">' + cs.name + '</option>';
+            }
+            $('#csNameDelete').selectpicker('refresh');
+        } else {
+            $('#csNameDelete').prop('disabled', true);
+            csNameDelete.innerHTML = "";
+            $('#csNameDelete').selectpicker('refresh');
+        }
+    }
+
+    function blankDevices() {
+        $('#csCuAdd').selectpicker('deselectAll');
+        $('#csCuModify').selectpicker('deselectAll');
+        $('#csCuDelete').selectpicker('deselectAll');
+        $('#csNameModify').selectpicker('deselectAll');
+        $('#csNameDelete').selectpicker('deselectAll');
+        btnRefresh.disabled = true;
+        devicesSelector.innerHTML = "";
+        measuresContainer.innerHTML = "";
+        csLocationModify.value = "";
+    }
+
+    function refresh_devices(cu_id, cs_id = null) {
+        let result = "";
+        btnRefresh.disabled = false;
+        $("#loading-screen").show();
+        $.ajax({
+            async: false,
+            type: "POST",
+            url: "{% url 'get-det-dev-of-cu' %}",
+            // contentType: "application/json; charset=utf-8",
+            data: { csrfmiddlewaretoken: '{{ csrf_token }}',
+                    cu_id: cu_id,
+                    cs_id: cs_id,
+                },
+            beforeSend: function() {
+                console.log("Loading...");
+
+                },
+            success:  function(response){
+                response = JSON.parse(response);
+                console.log(response);
+                result = response;
+                $("#loading-screen").hide();
+
+            },
+        });
+
+        return result;
+        
+    }
+
+    function create_devices(devices) {
+        devices_keys = Object.keys(devices);
+        for (let device of devices_keys) {
+            let class_info = "device";
+            if (devices[device].free == false) {
+                class_info += " disabled";
+            }
+            if (devices[device].selected == true) {
+                class_info += " selected";
+            }
+            let div_device = '<div id="dev-id-' + device + '" class="' + class_info + '" data-sn="' + devices[device].sn + '"data-dev-id="' + device + '">'
+                            +'<div class="selected-icon"></div>'
+                            +'<p>' + devices[device].name + ' ' + devices[device].sn + '</p>'
+                        +'</div>';
+            devicesSelector.innerHTML += div_device;
+
+            if (Object.keys(devices[device]).includes("available_measures")) {
+                for (let measure of devices[device].available_measures) {
+                    let class_info_meas = "measure dev-id-" + device;
+                    if (measure.selected == true) {
+                        class_info_meas += " selected";
+                        // measure.meas_name = measure.custom_name;
+                    }
+                    let custom_name = '<p hidden>&nbsp;→&nbsp;</p>'
+                                     +'<p hidden></p>';
+                    if (Object.keys(measure).includes('custom_name')) {
+                        if (measure.custom_name != null) {
+                            custom_name = '<p>&nbsp;→&nbsp;</p>'
+                                          +'<p>' + measure.custom_name + '</p>';
+                        }
+                    }
+                    let div_measure = '<div class="' + class_info_meas + '" data-meas-type="' + measure.meas_type + '" hidden>'
+                                                +'<div class="selected-icon">'
+                                                +'</div>'
+                                                +'<div class="measure-text">'
+                                                    +'<p>' + measure.meas_name + '</p>'
+                                                    + custom_name
+                                                +'</div>'
+                                            +'</div>';
+                    measuresContainer.innerHTML += div_measure;
+                }
+            }
+        }
+        devices_added = document.getElementsByClassName("device");
+        for (let device of devices_added) {
+            device.addEventListener("click", active_device);
+        }
+        for (let measure of document.getElementsByClassName("measure")) {
+            measure.addEventListener("mousedown", select_measure);
+        }
+
+    }
+
+    function refresh_devices_btn() {
+        if (btnAddTab.classList.contains("active")) {
+            refresh_devices_add();
+        } else if (btnModifyTab.classList.contains("active")) {
+            refresh_devices_modify();
+        }
+    }
+
+    function refresh_devices_add() {
+        devicesSelector.innerHTML = "";
+        measuresContainer.innerHTML = "";
+        if (csCuAdd.value != "") {
+            devices_to_create = refresh_devices(csCuAdd.value);
+            create_devices(devices_to_create);
+
+        }
+    }
+
+    function refresh_devices_modify() {
+        devicesSelector.innerHTML = "";
+        measuresContainer.innerHTML = "";
+        if (csNameModify.value != "") {
+            csLocationModify.value = csNameModify.options[csNameModify.selectedIndex].getAttribute('data-location');
+            devices_to_create = refresh_devices(csCuModify.value, csNameModify.value);
+            create_devices(devices_to_create);
+
+        }
+    }
+
+    function active_device(event) {
+        console.log(event.target);
+        if (event.target.classList.contains('active') == false) {
+            for (let device of document.getElementsByClassName('device')) {
+                device.classList.remove('active');
+            }
+            event.target.classList.add('active');
+            
+            for (let measure of document.getElementsByClassName('measure')) {
+                measure.hidden = true;
+            }
+
+            related_measures = document.getElementsByClassName(event.target.id);
+            for (let measure of related_measures) {
+                measure.hidden = false;
+            }
+
+        } else {
+            event.target.classList.toggle('selected');
+            related_measures = measuresContainer.getElementsByClassName(event.target.id);
+            for (let measure of related_measures) {
+                if (event.target.classList.contains('selected') == false) {
+                    measure.classList.remove('selected');
+                } else {
+                    measure.classList.add('selected');
+                }
+            }
+        }
+    }
+
+    function select_measure(event) {
+        let device = document.getElementById(event.target.classList[1]);
+        if (event.button == 2) {
+            // RIGHT CLICK
+            event.preventDefault();
+            let custom_name = prompt("Enter the new custom name for the measure", event.target.getElementsByClassName("measure-text")[0].getElementsByTagName("p")[0].innerHTML);
+            if (custom_name != null) {
+                event.target.getElementsByClassName("measure-text")[0].getElementsByTagName("p")[2].innerHTML = custom_name;
+                for (let text of event.target.querySelectorAll(".measure-text > *")) {
+                    text.hidden = false;
+                }
+                event.target.classList.add('selected');
+            }
+        } else {
+            // LEFT CLICK
+            event.target.classList.toggle('selected');
+
+            console.log(measuresContainer.getElementsByClassName(event.target.classList[1] + ' selected'));
+        }
+
+        if (measuresContainer.getElementsByClassName(event.target.classList[1] + ' selected').length == 0) {
+            device.classList.remove('selected');
+        } else {
+            device.classList.add('selected');
+        }
+    }
+
+    function submit_form() {
+        if (btnAddTab.classList.contains("active")) {
+            add_new_cs();
+        } else if (btnModifyTab.classList.contains("active")) {
+            modify_cs();
+        }
+    }
+
+    function add_new_cs() {
+        let is_valid = true;
+        if (csCuAdd.value != "") {
+            csCuAdd.classList.remove("btn-light-invalid");
+        } else {
+            csCuAdd.classList.add("btn-light-invalid");
+            is_valid = false;
+        }
+        
+        if (document.getElementById("csNameAdd").value != "" && document.getElementById("csNameAdd").value.length <= 30) {
+            document.getElementById("csNameAdd").classList.remove("is-invalid");
+        } else {
+            document.getElementById("csNameAdd").classList.add("is-invalid");
+            is_valid = false;
+        }
+
+        if (document.getElementById("csLocationAdd").value != "" && document.getElementById("csLocationAdd").value.length <= 30) {
+            document.getElementById("csLocationAdd").classList.remove("is-invalid");
+        } else {
+            document.getElementById("csLocationAdd").classList.add("is-invalid");
+            is_valid = false;
+        }
+
+        if (devicesSelector.getElementsByClassName("device selected").length == 0) {
+            document.getElementById("device-panel").classList.add("is-invalid");
+            is_valid = false;
+        } else {
+            document.getElementById("device-panel").classList.remove("is-invalid");
+        }
+
+        if (is_valid) {
+            console.log("ADD NEW!!!");
+            let selected_devices = [];
+            for (let device of devicesSelector.getElementsByClassName("device selected")) {
+                let selected_measures = [];
+                for (let measure of measuresContainer.getElementsByClassName(device.id + " selected")) {
+                    let measure_to_add = {};
+                    measure_to_add["meas_type"] = measure.getAttribute("data-meas-type");
+                    if (measure.getElementsByClassName("measure-text")[0].getElementsByTagName("p")[2].innerHTML != "") {
+                        measure_to_add["custom_name"] = measure.getElementsByClassName("measure-text")[0].getElementsByTagName("p")[2].innerHTML;
+                    } else {
+                        measure_to_add["custom_name"] = null;
+                    }
+                    selected_measures.push(measure_to_add);
+                }
+                selected_devices.push({
+                    "dev_id": device.getAttribute("data-dev-id"),
+                    "measures": selected_measures,
+                });
+            }
+            console.log(selected_devices);
+            $.ajax({
+                async: false,
+                type: "POST",
+                url: "{% url 'add-new-cs' %}",
+                // contentType: "application/json; charset=utf-8",
+                data: { csrfmiddlewaretoken: '{{ csrf_token }}',
+                        cu_id: csCuAdd.value,
+                        selected_devices: JSON.stringify(selected_devices),
+                        cs_name: document.getElementById("csNameAdd").value,
+                        cs_location: document.getElementById("csLocationAdd").value,
+                    },
+                success:  function(response){
+                    response = JSON.parse(response);
+                    if (response.status == "OK") {
+                        alert("✅ New Cycler Station added successfully");
+                        location.reload(); // TODO: Change to redirect to add_experiment view
+                    } else {
+                        alert("❌ Error adding the new Cycler Station");
+                    }
+                },
+                error: function(response) {
+                    alert("ERROR");
+                }
+            });
+        }
+
+    }
+
+    function modify_cs() {
+        let is_valid = true;
+        if (csCuModify.value != "") {
+            csCuModify.classList.remove("btn-light-invalid");
+        } else {
+            csCuModify.classList.add("btn-light-invalid");
+            is_valid = false;
+        }
+        if (csNameModify.value != "") {
+            csNameModify.classList.remove("btn-light-invalid");
+        } else {
+            csNameModify.classList.add("btn-light-invalid");
+            is_valid = false;
+        }
+
+        if (devicesSelector.getElementsByClassName("device selected").length == 0) {
+            document.getElementById("device-panel").classList.add("is-invalid");
+            is_valid = false;
+        } else {
+            document.getElementById("device-panel").classList.remove("is-invalid");
+        }
+
+        if (is_valid) {
+            console.log("MODIFY!!!");
+            let selected_devices = [];
+            for (let device of devicesSelector.getElementsByClassName("device selected")) {
+                let selected_measures = [];
+                for (let measure of measuresContainer.getElementsByClassName(device.id + " selected")) {
+                    let measure_to_add = {};
+                    measure_to_add["meas_type"] = measure.getAttribute("data-meas-type");
+                    if (measure.getElementsByClassName("measure-text")[0].getElementsByTagName("p")[2].innerHTML != "") {
+                        measure_to_add["custom_name"] = measure.getElementsByClassName("measure-text")[0].getElementsByTagName("p")[2].innerHTML;
+                    } else {
+                        measure_to_add["custom_name"] = null;
+                    }
+                    selected_measures.push(measure_to_add);
+                }
+                selected_devices.push({
+                    "dev_id": device.getAttribute("data-dev-id"),
+                    "measures": selected_measures,
+                });
+            }
+            console.log(selected_devices);
+            $.ajax({
+                async: false,
+                type: "POST",
+                url: "{% url 'modify-cs' %}",
+                // contentType: "application/json; charset=utf-8",
+                data: { csrfmiddlewaretoken: '{{ csrf_token }}',
+                        cu_id: csCuModify.value,
+                        selected_devices: JSON.stringify(selected_devices),
+                        cs_id: csNameModify.value,
+                    },
+                success:  function(response){
+                    response = JSON.parse(response);
+                    if (response.status == "OK") {
+                        alert("✅ Cycler Station modified successfully");
+                        location.reload(); // TODO: Change to redirect to add_experiment view
+                    } else {
+                        alert("❌ Error modifing the Cycler Station");
+                    }
+                },
+                error: function(response) {
+                    alert("ERROR");
+                }
+            });
+        }
+    }
+
+    function delete_cs() {
+        if (csNameDelete.value != "") {
+            $.ajax({
+                async: false,
+                type: "POST",
+                url: "{% url 'delete-cs' %}",
+                // contentType: "application/json; charset=utf-8",
+                data: { csrfmiddlewaretoken: '{{ csrf_token }}',
+                        cs_id: csNameDelete.value,
+                    },
+                success:  function(response){
+                    response = JSON.parse(response);
+                    if (response.status == "OK") {
+                        alert("✅ Cycler Station deleted successfully");
+                        location.reload();
+                    } else {
+                        alert("❌ Error deleting the Cycler Station");
+                    }
+                },
+            });
+        }
+    }
+
+    </script>
+
+{% endblock %}

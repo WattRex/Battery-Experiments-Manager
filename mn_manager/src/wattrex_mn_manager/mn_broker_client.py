@@ -96,7 +96,6 @@ class BrokerClientC():
         Args:
             raw_data (bytearray): [description]
         '''
-        # TODO: add cu_id to the message
         devices : List[CommDataDeviceC] = loads(raw_data)
         if len(devices) > 0:
             cu_id = devices[0].cu_id
