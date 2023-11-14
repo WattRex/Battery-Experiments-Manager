@@ -20,22 +20,23 @@ jobs:
     name: Build package ${{ github.ref_name }}
     uses: WattRex/System-Tools/.github/workflows/build_python_package.yml@develop
     with:
-      package-name: ${{ github.ref_name }}
-      package-path: ${{ github.ref_name }}
-      requirements-path: ${{ github.ref_name }}
+      package-name: wattrex_battery_cycler_mn_manager
+      package-path: mn_manager
+      source-path: mn_manager/src/wattrex_mn_manager
+      python-version: "3.10"
 
   build-package-on-pull-request:
-    if: ${{ github.event_name == 'pull_request_review' && github.event.review.state == 'approved' }}
-    name: Build package  ${{ github.event.pull_request.head.ref }}
+    if: ${{ github.event_name == 'pull_request_review' && github.event.review.state == 'approved' && github.event.pull_request.head.ref == 'mn_manager'}}
+    name: Build package ${{ github.event.pull_request.head.ref }}
     uses: WattRex/System-Tools/.github/workflows/build_python_package.yml@develop
     with:
-      package-name: ${{ github.event.pull_request.head.ref }}
-      package-path: ${{ github.event.pull_request.head.ref }}
-      requirements-path: ${{ github.event.pull_request.head.ref }}
+      package-name: wattrex_battery_cycler_mn_manager
+      package-path: mn_manager
+      source-path: mn_manager/src/wattrex_mn_manager
+      python-version: "3.10"
 
   publish-package:
     name: Publish package ${{ github.event.pull_request.head.ref }} to PyPi
-    if:     ${{ github.event_name == 'pull_request_review' }} && ${{ github.event.review.state == 'approved' }}
     needs: build-package-on-pull-request
     runs-on: ubuntu-latest
     environment: development
