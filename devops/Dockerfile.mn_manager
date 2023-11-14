@@ -12,11 +12,8 @@ RUN mkdir /code
 WORKDIR /code
 
 ARG CACHE=1
-ADD ./requirements_mn_manager.txt /code/
 RUN pip install --upgrade pip
-RUN pip install -r requirements_mn_manager.txt
-ADD ./mn_manager/ /code/
+RUN pip install --upgrade wattrex-mn-manager
+ADD ./devops/mn_manager/run.py /code/devops/mn_manager/run.py
 
-WORKDIR /code/tests
-
-CMD ["python", "run.py"]
+CMD ["python", "./devops/mn_manager/run.py"]
