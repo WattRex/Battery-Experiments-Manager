@@ -312,7 +312,7 @@ create table if not exists Instructions
 (
     InstrID         mediumint       unsigned    not null,
     ProfID          mediumint       unsigned    not null,
-    Mode            enum ('WAIT', 'CC_MODE', 'CV_MODE', 'CP_MODE') not null,                   -- WAIT, CC, CV, CP
+    Mode            enum ('WAIT', 'CC_MODE', 'CV_MODE', 'CP_MODE') not null,    -- WAIT, CC, CV, CP
     SetPoint        mediumint                   not null,
     LimitType       enum ('TIME', 'VOLTAGE', 'CURRENT', 'POWER') not null,      -- TIME, VOLTAGE, CURRENT, POWER
     LimitPoint      mediumint                   not null,
@@ -356,10 +356,8 @@ create table if not exists ExtendedMeasures
     constraint ExtendedMeasures_pk_1 
         primary key (ExpID, MeasID, UsedMeasID),
     constraint ExtendedMeasures_fk_1
-        foreign key (ExpID) references GenericMeasures (ExpID),
+        foreign key (ExpID, MeasID) references GenericMeasures (ExpID, MeasID),
     constraint ExtendedMeasures_fk_2
-        foreign key (MeasID) references GenericMeasures (MeasID),
-    constraint ExtendedMeasures_fk_3
         foreign key (UsedMeasID) references UsedMeasures (UsedMeasID)
 );
 
