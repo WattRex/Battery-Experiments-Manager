@@ -44,6 +44,7 @@ services:
       - ../static:/code/static
       - ../auto_lab:/code/auto_lab
       - ../batteryCycling_project:/code/batteryCycling_project
+      - ./mn_manager/log_config.yaml:/code/log_config.yaml
     env_file:
       - .cred.env
     depends_on:

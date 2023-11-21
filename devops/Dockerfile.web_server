@@ -11,6 +11,9 @@ ENV PYTHONUNBUFFERED 1
 RUN mkdir /code
 WORKDIR /code
 
+ADD ./devops/config_params.yaml ./devops/config_params.yaml
+ENV CONFIG_FILE_PATH=/code/devops/config_params.yaml
+
 ARG CACHE=1
 ADD ./requirements.txt /code/
 RUN pip install --upgrade pip
