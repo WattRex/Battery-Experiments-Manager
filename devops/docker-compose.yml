@@ -1,5 +1,7 @@
 version: '3.8'
 
+name: wattrex_mn_dev
+
 services:
   wattrex_db:
     image: mysql:8.0.31-debian
