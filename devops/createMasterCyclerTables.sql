@@ -119,7 +119,7 @@ create table if not exists ComputationalUnit
     constraint ComputationalUnit_pk_1
         primary key (CUID),
     constraint ComputationalUnit_unq_1
-        unique (HostName, IP, Port)
+        unique (MAC, HostName, IP, Port)
 );
 
 
