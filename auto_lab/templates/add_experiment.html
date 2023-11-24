@@ -338,6 +338,9 @@
             let value_to_return = false;
             let battery_selected = document.getElementById("expBattery").value;
             let cycler_station_selected = document.getElementById("expEquipment").value;
+            // Remove residual empty lines from text_to_validate
+            console.log(text_to_validate.replaceAll('\n\n', '\n'));
+            text_to_validate = text_to_validate.replaceAll('\n\n', '\n');
             $.ajax({
                 async: false,
                 type: "POST",

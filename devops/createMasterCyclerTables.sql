@@ -76,7 +76,7 @@ create table if not exists CompatibleDevices
     Name            varchar(30)                 not null,
     Manufacturer    varchar(30)                 not null,
     Model           varchar(30)                 not null,
-    DeviceType      enum ('Source', 'BiSource', 'Load', 'Meter', 'Epc') not null,      -- Source, BiSource, Load, Meter, Epc
+    DeviceType      enum ('Source', 'BiSource', 'Load', 'Meter', 'Epc', 'Bms', 'Bk', 'Flow') not null,      -- Source, BiSource, Load, Meter, Epc
     MinSWVersion    smallint        unsigned    not null,
     VoltMin         mediumint       unsigned    null,
     VoltMax         mediumint       unsigned    null,

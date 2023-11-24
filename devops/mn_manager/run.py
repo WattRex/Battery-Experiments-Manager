@@ -34,6 +34,6 @@ from wattrex_mn_manager import MnManagerNodeC
 if __name__ == '__main__':
     working_flag_event : threading.Event = threading.Event()
     working_flag_event.set()
-    mn_manager_node = MnManagerNodeC(working_flag=working_flag_event, cycle_period=1000)
+    mn_manager_node = MnManagerNodeC(working_flag=working_flag_event, cycle_period=750)
     log.info("Running MN Manager Node....")
     mn_manager_node.run()
