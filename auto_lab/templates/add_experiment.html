@@ -65,11 +65,27 @@
                                         <label for="expElectrolyteVolume">Electrolyte Volume [ml]</label>
                                         <input type="number" maxlength="number" min="0" step="1" oninput="checkNumber(this)" class="form-control " name="expElectrolyteVolume_input" id="expElectrolyteVolume" placeholder="ml" required>
                                     </div>
-
+                                    <div class="form-group col-12 col-md-6 col-xl-6">
+                                        <label for="expElectrolyteInitialSOC">Initial SOC</label>
+                                        <input type="number" maxlength="number" min="0" step="1" oninput="checkNumber(this)" class="form-control " name="expElectrolyteInitialSOC_input" id="expElectrolyteInitialSOC" placeholder="%" required>
+                                    </div>
+                                    <div class="form-group col-12 col-md-6 col-xl-6">
+                                        <label for="expElectrolyteMinFlowRate">Min Flow Rate [ml/min]</label>
+                                        <input type="number" maxlength="number" min="0" step="1" oninput="checkNumber(this)" class="form-control " name="expElectrolyteMinFlowRate_input" id="expElectrolyteMinFlowRate" placeholder="ml/min" required>
+                                    </div>
                                     <div class="form-group col-12 col-md-6 col-xl-6">
                                         <label for="expElectrolyteMaxFlowRate">Max Flow Rate [ml/min]</label>
                                         <input type="number" maxlength="number" min="0" step="1" oninput="checkNumber(this)" class="form-control " name="expElectrolyteMaxFlowRate_input" id="expElectrolyteMaxFlowRate" placeholder="ml/min" required>
                                     </div>
+                                    <div class="form-group col-12 col-md-6 col-xl-6">
+                                        <label for="expElectrolytePolarity">Polarity</label>
+                                        <select name="expElectrolytePolarity_input" id="expElectrolytePolarity" class="selectInput marginBottom" data-title="Select Polarity..." data-width="100%" data-size="8" required>
+                                            {% for polarity in redox_stack.polarity %}
+                                                <option data-tokens="{{ polarity }}" value="{{ polarity }}" >{{ polarity|title }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
                                 </div>
                             </div>
                             </div>
@@ -223,6 +239,7 @@
         $('#expElectrodeElectrolyte').selectpicker();
         $('#expBattery').selectpicker();
         $('#expEquipment').selectpicker();
+        $('#expElectrolytePolarity').selectpicker();
 
         function reloadProfiles(){
             var profiles = "";
@@ -413,7 +430,16 @@
                 if (validateTextInput("expElectrolyteVolume") == false) {
                     validationState = false;
                 }
+                if (validateTextInput("expElectrolyteInitialSOC") == false) {
+                    validationState = false;
+                }
+                if (validateTextInput("expElectrolyteMinFlowRate") == false) {
+                    validationState = false;
+                }
                 if (validateTextInput("expElectrolyteMaxFlowRate") == false) {
+                    validationState = false;
+                }
+                if (validateSelectInput("expElectrolytePolarity") == false) {
                     validationState = false;
                 }
             }

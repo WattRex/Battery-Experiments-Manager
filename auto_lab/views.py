@@ -27,7 +27,7 @@ from auto_lab.models import Alarm, Battery, Compatibledevices, Computationalunit
                                 Usedmeasures, Availablemeasures, Detecteddevices
 from auto_lab.models_types import Technology_e, Chemistry_Lithium_e, Chemistry_LeadAcid_e, BipolarType_e, \
                          MembraneType_e, ElectrolyteType_e, DeviceType_e, Available_e, ExperimentStatus_e, \
-                         DeviceStatus_e, Mode_e, LimitType_e, ConnStatus_e
+                         DeviceStatus_e, Mode_e, LimitType_e, ConnStatus_e, Polarity_e
 from auto_lab.validator import ques
 from auto_lab.analyzer import analyzer, stringToInstructions
 
@@ -140,8 +140,11 @@ def form_submit_experiment(request):
 
         if form['expBattery_type'] == 'RedoxStack':
             newRedoxElectrolyte = Redoxelectrolyte( exp_id = newExperiment,
-                                                    bat_id = newExperiment.bat_id,
+                                                    bat_id = Redoxstack.objects.get(bat_id=newExperiment.bat_id),
+                                                    polarity = form['expElectrolytePolarity_input'],
                                                     electrolyte_vol = form['expElectrolyteVolume_input'],
+                                                    initial_soc = form['expElectrolyteInitialSOC_input'],
+                                                    min_flow_rate = form['expElectrolyteMinFlowRate_input'],
                                                     max_flow_rate = form['expElectrolyteMaxFlowRate_input'],
                                                   )
             newRedoxElectrolyte.save()
@@ -361,6 +364,7 @@ def validateProfile(request):
     error_msg = ''
     try:
         instructions = ques.permatrago(file.list)
+
         tmp_analyzer = analyzer(stringToInstructions(request.POST['text']))
         battery_id = request.POST['battery_selected']
         cycler_station_id = request.POST['cycler_station_selected']
@@ -566,6 +570,7 @@ def add_experiment(request):
     redox_stack['bipolar_type'] = BipolarType_e.values
     redox_stack['membrane_type'] = MembraneType_e.values
     redox_stack['electrolyte_type'] = ElectrolyteType_e.values
+    redox_stack['polarity'] = Polarity_e.values
     context = {
         'batteries': batteries,
         'cycler_stations': cycler_stations,
