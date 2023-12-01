@@ -1,8 +1,8 @@
 # This workflow deploy system tools to development environment
 
-name: Master node manager QA and deploy to Pypi
+name: deploy DEVELOPMENT
 
-#on:
+on:
   push:
     branches: [ "mn_manager" ]
 
@@ -10,8 +10,8 @@ name: Master node manager QA and deploy to Pypi
     types: [submitted]
     review:
       pull_request:
-        base:
-          ref: [  "mn_manager" ]
+        head:
+          ref: [ "mn_manager" ]
 
 jobs:
 
@@ -24,6 +24,7 @@ jobs:
       package-path: mn_manager
       source-path: mn_manager/src/wattrex_mn_manager
       python-version: "3.10"
+      is-test-package: false
 
   build-package-on-pull-request:
     if: ${{ github.event_name == 'pull_request_review' && github.event.review.state == 'approved' && github.event.pull_request.head.ref == 'mn_manager'}}
@@ -34,9 +35,10 @@ jobs:
       package-path: mn_manager
       source-path: mn_manager/src/wattrex_mn_manager
       python-version: "3.10"
+      is-test-package: false
 
   publish-package:
-    name: Publish package ${{ vars.MN_MANAGER_PACKAGE_NAME }} to PyPi
+    name: Publish package ${{ vars.MN_MANAGER_PACKAGE_NAME }} to Test PyPi
     needs: build-package-on-pull-request
     runs-on: ubuntu-latest
     environment: development
@@ -50,9 +52,11 @@ jobs:
           name:  ${{ vars.MN_MANAGER_PACKAGE_NAME }}
           path: ${{ vars.MN_MANAGER_PACKAGE_NAME }}/dist/
 
-      - name: Publish package to PyPI
-        uses: pypa/gh-action-pypi-publish@f8c70e705ffc13c3b4d1221169b84f12a75d6ca8
+      - name: Publish package to Test PyPI
+        uses: pypa/gh-action-pypi-publish@b7f401de30cb6434a1e19f805ff006643653240e #realse/v1.8.10
         with:
+          verbose: true
           user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          packages-dir: ${{ vars.MN_MANAGER_PACKAGE_NAME }}/dist/
+          password: ${{ secrets.PYPI_TEST_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
+          packages-dir: "${{ vars.MN_MANAGER_PACKAGE_NAME }}/dist/"
