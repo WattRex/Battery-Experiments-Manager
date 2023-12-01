@@ -2,6 +2,8 @@ name: Docker Image CI
 
 on:
   #workflow_call:
+  push:
+  
   workflow_dispatch:
     inputs:
       dockerfile-path:
@@ -33,13 +35,13 @@ jobs:
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
-          images: ${{ inputs.docker-repo-name }}
+          images: mariuscrsn79/wattrex-master-node-manager #${{ inputs.docker-repo-name }}
       
       - name: Build and push Docker image
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
         with:
           context: .
-          file: ${{ dockerfile-path }
+          file: devops/Dockerfile.mn_manager #${{ dockerfile-path }
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
