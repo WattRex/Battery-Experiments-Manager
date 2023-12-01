@@ -27,7 +27,7 @@ from auto_lab.models import Alarm, Battery, Compatibledevices, Computationalunit
                                 Usedmeasures, Availablemeasures, Detecteddevices
 from auto_lab.models_types import Technology_e, Chemistry_Lithium_e, Chemistry_LeadAcid_e, BipolarType_e, \
                          MembraneType_e, ElectrolyteType_e, DeviceType_e, Available_e, ExperimentStatus_e, \
-                         DeviceStatus_e, Mode_e, LimitType_e, ConnStatus_e
+                         DeviceStatus_e, Mode_e, LimitType_e, ConnStatus_e, Polarity_e
 from auto_lab.validator import ques
 from auto_lab.analyzer import analyzer, stringToInstructions
 
@@ -127,6 +127,8 @@ def form_submit_experiment(request):
 
             for instr in instructions:
                 instr.prof_id = newProfile
+                instr.mode = instr.mode.value
+                instr.limit_type = instr.limit_type.value
             Instructions.objects.bulk_create(instructions)
 
         elif 'expProfileSelected_input' in form:
@@ -138,8 +140,11 @@ def form_submit_experiment(request):
 
         if form['expBattery_type'] == 'RedoxStack':
             newRedoxElectrolyte = Redoxelectrolyte( exp_id = newExperiment,
-                                                    bat_id = newExperiment.bat_id,
+                                                    bat_id = Redoxstack.objects.get(bat_id=newExperiment.bat_id),
+                                                    polarity = form['expElectrolytePolarity_input'],
                                                     electrolyte_vol = form['expElectrolyteVolume_input'],
+                                                    initial_soc = form['expElectrolyteInitialSOC_input'],
+                                                    min_flow_rate = form['expElectrolyteMinFlowRate_input'],
                                                     max_flow_rate = form['expElectrolyteMaxFlowRate_input'],
                                                   )
             newRedoxElectrolyte.save()
@@ -344,9 +349,9 @@ def form_submit_battery(request):
             newRedoxStack = Redoxstack( bat_id = newBattery,
                                         electrode_size = int(float(form['redoxElectrodeSize_input'])*100),
                                         electrode_composition = form['redoxElectrodeComposition_input'],
-                                        bipolar_type = BipolarType_e(form['redoxBipolarType_input']),
-                                        membrane_type = MembraneType_e(form['redoxMembraneType_input']),
-                                        electrolyte_type = ElectrolyteType_e(form['redoxElectrolyteType_input'])
+                                        bipolar_type = BipolarType_e(form['redoxBipolarType_input']).value,
+                                        membrane_type = MembraneType_e(form['redoxMembraneType_input']).value,
+                                        electrolyte_type = ElectrolyteType_e(form['redoxElectrolyteType_input']).value
                                       )
             newRedoxStack.save()
 
@@ -369,14 +374,16 @@ def validateProfile(request):
         used_devices = Useddevices.objects.filter(cs_id=cycler_station_id)
         volt_max, volt_min, curr_max, curr_min = battery.volt_max, battery.volt_min, battery.curr_max, battery.curr_min
         for device in used_devices:
-            if device.dev_id.comp_dev_id.volt_min > volt_min:
-                volt_min = device.dev_id.comp_dev_id.volt_min
-            if device.dev_id.comp_dev_id.volt_max < volt_max:
-                volt_max = device.dev_id.comp_dev_id.volt_max
-            if device.dev_id.comp_dev_id.curr_min > curr_min:
-                curr_min = device.dev_id.comp_dev_id.curr_min
-            if device.dev_id.comp_dev_id.curr_max < curr_max:
-                curr_max = device.dev_id.comp_dev_id.curr_max
+            if device.dev_id.comp_dev_id.volt_min is not None and device.dev_id.comp_dev_id.volt_max is not None\
+               and device.dev_id.comp_dev_id.curr_min is not None and device.dev_id.comp_dev_id.curr_max is not None:
+                if device.dev_id.comp_dev_id.volt_min > volt_min:
+                    volt_min = device.dev_id.comp_dev_id.volt_min
+                if device.dev_id.comp_dev_id.volt_max < volt_max:
+                    volt_max = device.dev_id.comp_dev_id.volt_max
+                if device.dev_id.comp_dev_id.curr_min > curr_min:
+                    curr_min = device.dev_id.comp_dev_id.curr_min
+                if device.dev_id.comp_dev_id.curr_max < curr_max:
+                    curr_max = device.dev_id.comp_dev_id.curr_max
         if tmp_analyzer.curr_max > curr_max or tmp_analyzer.curr_min < curr_min:
             error_msg = 'Current out of range'
             is_valid = False
@@ -563,6 +570,7 @@ def add_experiment(request):
     redox_stack['bipolar_type'] = BipolarType_e.values
     redox_stack['membrane_type'] = MembraneType_e.values
     redox_stack['electrolyte_type'] = ElectrolyteType_e.values
+    redox_stack['polarity'] = Polarity_e.values
     context = {
         'batteries': batteries,
         'cycler_stations': cycler_stations,
@@ -622,14 +630,16 @@ def getProfiles(request):
     volt_max, volt_min, curr_max, curr_min = battery.volt_max, battery.volt_min, battery.curr_max, battery.curr_min
 
     for device in used_devices:
-        if device.dev_id.comp_dev_id.volt_min > volt_min:
-            volt_min = device.dev.comp_dev_id.volt_min
-        if device.dev_id.comp_dev_id.volt_max < volt_max:
-            volt_max = device.dev_id.comp_dev_id.volt_max
-        if device.dev_id.comp_dev_id.curr_min > curr_min:
-            curr_min = device.dev_id.comp_dev_id.curr_min
-        if device.dev_id.comp_dev_id.curr_max < curr_max:
-            curr_max = device.dev_id.comp_dev_id.curr_max
+        if device.dev_id.comp_dev_id.volt_min is not None and device.dev_id.comp_dev_id.volt_max is not None\
+               and device.dev_id.comp_dev_id.curr_min is not None and device.dev_id.comp_dev_id.curr_max is not None:
+            if device.dev_id.comp_dev_id.volt_min > volt_min:
+                volt_min = device.dev_id.comp_dev_id.volt_min
+            if device.dev_id.comp_dev_id.volt_max < volt_max:
+                volt_max = device.dev_id.comp_dev_id.volt_max
+            if device.dev_id.comp_dev_id.curr_min > curr_min:
+                curr_min = device.dev_id.comp_dev_id.curr_min
+            if device.dev_id.comp_dev_id.curr_max < curr_max:
+                curr_max = device.dev_id.comp_dev_id.curr_max
     # print(f"\nvolt_max: {volt_max}\nvolt_min: {volt_min}\ncurr_max: {curr_max}\ncurr_min: {curr_min}\n")
     profiles = Profile.objects.filter(volt_max__lte=volt_max).filter(volt_min__gte=volt_min).filter(curr_max__lte=curr_max).filter(curr_min__gte=curr_min)
     profiles_extra = Profile.objects.filter(volt_max=None).filter(volt_min=None).filter(curr_max__lte=curr_max).filter(curr_min__gte=curr_min)

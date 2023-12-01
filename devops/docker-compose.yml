@@ -1,6 +1,6 @@
 version: '3.8'
 
-name: wattrex_mn_dev
+name: wattrex_mn_prod
 
 services:
   wattrex_db:
@@ -8,10 +8,11 @@ services:
     container_name: wattrex_master_db
     restart: always
     ports:
-      - "3369:3306"
+      - "3322:3306"
     volumes:
-      - wattrex_db_data_dev:/var/lib/mysql
+      - wattrex_db_data_prod:/var/lib/mysql
       - ./createMasterCyclerTables.sql:/docker-entrypoint-initdb.d/createMasterCyclerTables.sql
+      - ./insertDeviceInfoToMaster.sql:/docker-entrypoint-initdb.d/insertDeviceInfoToMaster.sql
     env_file:
       - .cred.env
 
@@ -39,13 +40,10 @@ services:
     container_name: wattrex_web_server
     restart: always
     ports:
-      - "8869:8000"
+      - "8811:8000"
     ipc: host
     volumes:
-      # - ./media/profiles:/code/media/profiles
-      - ../static:/code/static
-      - ../auto_lab:/code/auto_lab
-      - ../batteryCycling_project:/code/batteryCycling_project
+      - ../static/images:/code/static/images                                     # Linked to store graph images
       - ./mn_manager/log_config.yaml:/code/log_config.yaml
     env_file:
       - .cred.env
@@ -55,5 +53,5 @@ services:
 
 
 volumes:
-  wattrex_db_data_dev:
-    name: wattrex_db_data_dev
+  wattrex_db_data_prod:
+    name: wattrex_db_data_prod
