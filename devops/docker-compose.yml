@@ -11,15 +11,15 @@ services:
       - "3322:3306"
     volumes:
       - wattrex_db_data_prod:/var/lib/mysql
-      - ./createMasterCyclerTables.sql:/docker-entrypoint-initdb.d/createMasterCyclerTables.sql
-      - ./insertDeviceInfoToMaster.sql:/docker-entrypoint-initdb.d/insertDeviceInfoToMaster.sql
+      - ./master_db/createMasterCyclerTables.sql:/docker-entrypoint-initdb.d/createMasterCyclerTables.sql
+      - ./master_db/insertDeviceInfoToMaster.sql:/docker-entrypoint-initdb.d/insertDeviceInfoToMaster.sql
     env_file:
-      - .cred.env
+      - ./master_db/.cred.env
 
   wattrex_mn_manager:
     build:
       context: ../
-      dockerfile: ./devops/Dockerfile.mn_manager
+      dockerfile: ./devops/mn_manager/Dockerfile.mn_manager
     image: wattrex-mn-manager:0.0.1
     container_name: wattrex_mn_manager
     restart: always
@@ -27,16 +27,14 @@ services:
     volumes:
       - ./mn_manager/log_config.yaml:/code/devops/mn_manager/log_config.yaml
       - ./mn_manager/.cred.yaml:/code/devops/mn_manager/.cred.yaml
-    env_file:
-      - .cred.env
     depends_on:
       - wattrex_db
 
   wattrex_web_server:
     build:
       context: ../
-      dockerfile: ./devops/Dockerfile.web_server
-    image: wattrex-web-server:0.0.2
+      dockerfile: ./devops/web_server/Dockerfile.web_server
+    image: wattrex-web-server:0.0.1
     container_name: wattrex_web_server
     restart: always
     ports:
@@ -44,9 +42,9 @@ services:
     ipc: host
     volumes:
       - ../static/images:/code/static/images                                     # Linked to store graph images
-      - ./mn_manager/log_config.yaml:/code/log_config.yaml
+      - ./web_server/log_config.yaml:/code/log_config.yaml
     env_file:
-      - .cred.env
+      - ./web_server/.cred.env
     depends_on:
       - wattrex_db
       - wattrex_mn_manager
