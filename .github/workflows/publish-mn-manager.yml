@@ -2,7 +2,7 @@
 
 name: Master node manager QA and deploy to Pypi
 
-#on:
+on:
   push:
     branches: [ "mn_manager" ]
 
