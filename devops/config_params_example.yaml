@@ -1,0 +1,9 @@
+---
+
+system_shared_tool:
+  DEFAULT_CHAN_NUM_MSG: 300
+  DEFAULT_IPC_MSG_SIZE: 600
+  DEFAULT_CHAN_TIMEOUT: 3
+
+wattrex_driver_db:
+  DEFAULT_CRED_FILEPATH: '~/Battery-Experiments-Manager/devops/mn_manager/.cred.yaml'
