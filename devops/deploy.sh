@@ -1,7 +1,94 @@
 #!/bin/bash
 # This script is used to deploy the master node
 
+# CONSTANTS
+MIN_MSG_MAX=300
+MIN_MSGSIZE_MAX=8000
+
+ARG1=$1
+
 cd "$(dirname "$0")/.."
+
+initial_deploy () {
+    # TODO: Add force_stop to restart the system if it is already running
+    check_mqueue_sizes
+    # If ARG1 is equal to "build", execute the build command
+    if [ "${ARG1}" = "build" ]; then
+        docker compose -f ./devops/docker-compose.yml up -d --build
+    else
+        docker compose -f ./devops/docker-compose.yml up -d
+    fi
+    if [ $? -eq 0 ]; then
+        echo "Master node containers deployed"
+        # Check if the master node database is running to reset the web container
+        source ./devops/master_db/.cred.env &> /dev/null
+        text_wait_db="Waiting for master db"
+        is_db_up=0
+        dots_counter=0
+        echo ${text_wait_db}
+        while [ $is_db_up -lt 15 ]
+        do
+            check_master_db
+            if [ $? -eq 0 ]; then
+                is_db_up=$((is_db_up+1))
+            fi
+            text_wait_db="${text_wait_db}."
+            dots_counter=$((dots_counter+1))
+            sleep 2
+            echo -e '\e[1A\e[K'$text_wait_db
+            if [ $dots_counter -eq 10 ]; then
+                dots_counter=0
+                text_wait_db="Waiting for master db"
+            fi
+        done
+        docker restart wattrex_web_server
+
+    else
+        echo "Error deploying the master node"
+        exit 1
+    fi
+}
+
+check_mqueue_sizes () {
+    # Check if the mqueue sizes are set over the minimum required
+    error_mqueue_sizes=0
+
+    # Perform the cat command and store the result in a variable
+    result_msg_max=$(cat /proc/sys/fs/mqueue/msg_max)
+    result_msgsize_max=$(cat /proc/sys/fs/mqueue/msgsize_max)
+
+    # Check if the result is lower than 300
+    if [ $result_msg_max -lt $MIN_MSG_MAX ]; then
+        echo "Msg_max value (${result_msg_max}) is lower than the min required (${MIN_MSG_MAX})."
+        error_mqueue_sizes=1
+    fi
+    if [ $result_msgsize_max -lt $MIN_MSGSIZE_MAX ]; then
+        echo "Msgsize_max value (${result_msgsize_max}) is lower than the min required (${MIN_MSGSIZE_MAX})."
+        error_mqueue_sizes=1
+    fi
+
+    # If there is an error, exit the script
+    if [ $error_mqueue_sizes -eq 1 ]; then
+        exit 1
+    fi
+}
+
+check_master_db () {
+    # Check if the master node database is running
+    docker exec -it wattrex_master_db mysqladmin ping -u ${MYSQL_USER} -p${MYSQL_PASSWORD} &> /dev/null
+}
+
+launch_mqtt () {
+    docker compose -f ./devops/broker_mqtt/docker-compose.yml up -d
+}
+
+stop_mqtt () {
+    docker compose -f ./devops/broker_mqtt/docker-compose.yml down
+}
+
+################################################################################
+#################################     MAIN     #################################
+################################################################################
 
 # Check if the required software is installed
 if ! command -v docker &> /dev/null
@@ -31,4 +118,50 @@ do
     exit 1
     fi
 done
+
+# Check command to run depending on the arguments
+case ${ARG1} in
+    "")
+        # echo "Initial Deploy"
+        launch_mqtt
+        initial_deploy
+        ;;
+    "mqtt")
+        # echo "Launch MQTT"
+        launch_mqtt
+        ;;
+    "stop-mqtt")
+        # echo "Stop MQTT"
+        stop_mqtt
+        ;;
+    "force-stop")
+        # echo "Force Stop"
+        stop_mqtt
+        docker compose -f ./devops/docker-compose.yml down
+        ;;
+    # "sniffer")
+    #     # echo "Check Sniffer"
+    #     if [[ "${ARG2}" = "can" ]] || [[ "${ARG2}" = "scpi" ]]; then
+    #         # echo "Cycler ${2}"
+    #         check_sniffer "${ARG2}"
+    #     else
+    #         >&2 echo "[ERROR] Invalid sniffer"
+    #         exit 3
+    #     fi
+    #     ;;
+    # "stop-cycler")
+    #     # echo "Stop cycler ${ARG2}"
+    #     if [[ ${ARG2} =~ $INT_RE ]]; then
+    #         # echo "Cycler ${2}"
+    #         stop_active_cycler "${ARG2}"
+    #     else
+    #         >&2 echo "[ERROR] Invalid Cycler Station ID"
+    #         exit 3
+    #     fi
+    #     ;;
+    *)
+        >&2 echo "[ERROR] Invalid command type: ${ARG1}"
+        exit 3
+        ;;
+esac
 

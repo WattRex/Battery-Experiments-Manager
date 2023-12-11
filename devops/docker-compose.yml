@@ -4,7 +4,7 @@ name: wattrex_mn_prod
 
 services:
   wattrex_db:
-    image: mysql:8.0.31-debian
+    image: mysql #:8.0.31-debian
     container_name: wattrex_master_db
     restart: always
     ports:
