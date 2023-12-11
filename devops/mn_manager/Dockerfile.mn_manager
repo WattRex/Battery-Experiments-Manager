@@ -16,7 +16,8 @@ ENV CONFIG_FILE_PATH=/code/devops/config_params.yaml
 
 ARG CACHE=1
 RUN pip install --upgrade pip
-RUN pip install --upgrade wattrex-mn-manager
+ARG test_pypi_flag
+RUN pip install --upgrade ${test_pypi_flag} wattrex-mn-manager
 ADD ./devops/mn_manager/run.py /code/devops/mn_manager/run.py
 
 CMD ["python", "./devops/mn_manager/run.py"]

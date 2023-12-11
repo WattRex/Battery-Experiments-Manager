@@ -7,6 +7,9 @@ MIN_MSGSIZE_MAX=8000
 
 ARG1=$1
 
+#Set production environment as default
+docker_compose_file="docker-compose.yml"
+
 cd "$(dirname "$0")/.."
 
 initial_deploy () {
@@ -14,9 +17,9 @@ initial_deploy () {
     check_mqueue_sizes
     # If ARG1 is equal to "build", execute the build command
     if [ "${ARG1}" = "build" ]; then
-        docker compose -f ./devops/docker-compose.yml up -d --build
+        docker compose -f ./devops/${docker_compose_file} up -d --build
     else
-        docker compose -f ./devops/docker-compose.yml up -d
+        docker compose -f ./devops/${docker_compose_file} up -d
     fi
     if [ $? -eq 0 ]; then
         echo "Master node containers deployed"
@@ -86,6 +89,20 @@ stop_mqtt () {
     docker compose -f ./devops/broker_mqtt/docker-compose.yml down
 }
 
+ask_for_environment () {
+    # Ask for input of dev or prod
+    echo "Do you want to work with the dev or prod version? (dev/prod)"
+    read -p "Type dev or prod: " dev_or_prod
+    if [ "${dev_or_prod}" = "dev" ]; then
+        docker_compose_file="dev-docker-compose.yml"
+    elif [ "${dev_or_prod}" = "prod" ]; then
+        docker_compose_file="docker-compose.yml"
+    else
+        echo "Invalid input"
+        exit 1
+    fi
+}
+
 ################################################################################
 #################################     MAIN     #################################
 ################################################################################
@@ -103,8 +120,8 @@ then
 fi
 
 # Check if the required files are present.
-required_file_list=("docker-compose.yml" "config_params.yaml" "web_server/.cred.env"
-                    "web_server/log_config.yaml" "mn_manager/log_config.yaml"
+required_file_list=("docker-compose.yml" "dev-docker-compose.yml" "config_params.yaml"
+                    "web_server/.cred.env" "web_server/log_config.yaml" "mn_manager/log_config.yaml"
                     "mn_manager/.cred.yaml" "master_db/.cred.env"
                     "master_db/createMasterCyclerTables.sql"
                     "master_db/insertDeviceInfoToMaster.sql" "broker_mqtt/.cred.env"
@@ -121,9 +138,10 @@ done
 
 # Check command to run depending on the arguments
 case ${ARG1} in
-    "")
+    ""|"build")
         # echo "Initial Deploy"
         launch_mqtt
+        ask_for_environment
         initial_deploy
         ;;
     "mqtt")
@@ -137,28 +155,9 @@ case ${ARG1} in
     "force-stop")
         # echo "Force Stop"
         stop_mqtt
-        docker compose -f ./devops/docker-compose.yml down
+        ask_for_environment
+        docker compose -f ./devops/${docker_compose_file} down
         ;;
-    # "sniffer")
-    #     # echo "Check Sniffer"
-    #     if [[ "${ARG2}" = "can" ]] || [[ "${ARG2}" = "scpi" ]]; then
-    #         # echo "Cycler ${2}"
-    #         check_sniffer "${ARG2}"
-    #     else
-    #         >&2 echo "[ERROR] Invalid sniffer"
-    #         exit 3
-    #     fi
-    #     ;;
-    # "stop-cycler")
-    #     # echo "Stop cycler ${ARG2}"
-    #     if [[ ${ARG2} =~ $INT_RE ]]; then
-    #         # echo "Cycler ${2}"
-    #         stop_active_cycler "${ARG2}"
-    #     else
-    #         >&2 echo "[ERROR] Invalid Cycler Station ID"
-    #         exit 3
-    #     fi
-    #     ;;
     *)
         >&2 echo "[ERROR] Invalid command type: ${ARG1}"
         exit 3
