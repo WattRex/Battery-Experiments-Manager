@@ -20,7 +20,7 @@ services:
     build:
       context: ../
       dockerfile: ./devops/mn_manager/Dockerfile.mn_manager
-    image: wattrex-mn-manager:0.0.1
+    image: javibu13/wattrex-mn-manager:latest
     container_name: wattrex_mn_manager
     restart: always
     ipc: host
@@ -34,7 +34,7 @@ services:
     build:
       context: ../
       dockerfile: ./devops/web_server/Dockerfile.web_server
-    image: wattrex-web-server:0.0.1
+    image: javibu13/wattrex-web-server:latest
     container_name: wattrex_web_server
     restart: always
     ports:
