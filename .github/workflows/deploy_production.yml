@@ -1,32 +1,16 @@
-# This workflow deploy system tools to development environment
+# This workflow deploy system tools to production environment
 
-name: Master node manager QA and deploy to Pypi
+name: deploy PRODUCTION
 
-# on:
-#   push:
-#     branches: [ "mn_manager" ]
-
-#   pull_request_review:
-#     types: [submitted]
-#     review:
-#       pull_request:
-#         base:
-#           ref: [  "mn_manager" ]
+on:
+  pull_request_review:
+    types:
+      - submitted
 
 jobs:
 
-  build-package-on-push:
-    if: ${{ github.event_name == 'push'}}
-    name: Build package ${{ vars.MN_MANAGER_PACKAGE_NAME }}
-    uses: WattRex/System-Tools/.github/workflows/build_python_package.yml@develop
-    with:
-      package-name: ${{ vars.MN_MANAGER_PACKAGE_NAME }}
-      package-path: mn_manager
-      source-path: mn_manager/src/wattrex_mn_manager
-      python-version: "3.10"
-
   build-package-on-pull-request:
-    if: ${{ github.event_name == 'pull_request_review' && github.event.review.state == 'approved' && github.event.pull_request.head.ref == 'mn_manager'}}
+    if: ${{ github.event_name == 'pull_request_review' && github.event.review.state == 'approved' && github.event.pull_request.head.ref == 'develop' && github.event.pull_request.base.ref == 'master' }}
     name: Build package ${{ vars.MN_MANAGER_PACKAGE_NAME }}
     uses: WattRex/System-Tools/.github/workflows/build_python_package.yml@develop
     with:
@@ -34,12 +18,13 @@ jobs:
       package-path: mn_manager
       source-path: mn_manager/src/wattrex_mn_manager
       python-version: "3.10"
+      is-test-package: false
 
   publish-package:
     name: Publish package ${{ vars.MN_MANAGER_PACKAGE_NAME }} to PyPi
     needs: build-package-on-pull-request
     runs-on: ubuntu-latest
-    environment: development
+    environment: production
     permissions:
       id-token: write
 
@@ -53,6 +38,7 @@ jobs:
       - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@f8c70e705ffc13c3b4d1221169b84f12a75d6ca8
         with:
+          verbose: true
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-          packages-dir: ${{ vars.MN_MANAGER_PACKAGE_NAME }}/dist/
+          packages-dir: "${{ vars.MN_MANAGER_PACKAGE_NAME }}/dist/"
