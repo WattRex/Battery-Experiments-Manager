@@ -8,6 +8,7 @@ on:
         required: true
         type: string
 
+
       docker-repo-name:
         description: Name of docker hub repository used to push the image
         required: true
@@ -24,10 +25,10 @@ on:
         required: true
         type: string
 
-      docker-pass:
+    secrets:
+      DOCKER_PASSWORD_JAVI:
         description: Docker hub password
         required: true
-        type: string
 
 jobs:
   push_to_registry:
@@ -41,7 +42,7 @@ jobs:
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
         with:
           username: ${{ inputs.docker-user }}
-          password: ${{ inputs.docker-pass }}
+          password: ${{ secrets.DOCKER_PASSWORD_JAVI }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
