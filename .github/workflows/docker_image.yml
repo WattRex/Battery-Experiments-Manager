@@ -17,7 +17,7 @@ on:
         description: Flag to indicate if the image is for develop or master branch
         required: false
         type: boolean
-        default: false
+        default: true
 
 jobs:
   push_to_registry:
