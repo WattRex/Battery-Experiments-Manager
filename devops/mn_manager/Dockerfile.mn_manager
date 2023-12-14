@@ -1,0 +1,22 @@
+FROM python:3.9
+
+LABEL   org.opencontainers.image.authors="javiersanzmoline@gmail.com" \
+        org.opencontainers.image.title="Battery-Experiments-Manager" \
+        org.opencontainers.image.description="A python service to manage master node communicatin externaly through mqtt" \
+        org.opencontainers.image.url="https://github.com/WattRex/Battery-Experiments-Manager" \
+        org.opencontainers.image.source="https://github.com/WattRex/Battery-Experiments-Manager" \
+        org.opencontainers.image.licenses="GPL-3.0"
+
+ENV PYTHONUNBUFFERED 1
+RUN mkdir /code
+WORKDIR /code
+
+ADD ./devops/config_params_example.yaml.yaml ./devops/config_params.yaml
+ENV CONFIG_FILE_PATH=/code/devops/config_params.yaml
+
+ARG CACHE=1
+RUN pip install --upgrade pip
+RUN pip install --upgrade wattrex-mn-manager
+ADD ./devops/mn_manager/run.py /code/devops/mn_manager/run.py
+
+CMD ["python", "./devops/mn_manager/run.py"]
