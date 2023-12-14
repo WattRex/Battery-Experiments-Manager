@@ -1,0 +1,32 @@
+version: '3'
+
+name: wattrex_mqtt_broker_prod
+
+services:
+
+  rabbit_mq:
+    image: rabbitmq:3.11.8-management
+    container_name: rabbit_mq
+    privileged: true
+    restart: always
+    env_file:
+      - .cred.env
+    volumes:
+      - ./enabled_plugins:/etc/rabbitmq/enabled_plugins
+      - rabbit_prod:/var/lib/rabbitmq
+
+    ports:
+      - "15671:15671"
+      - "15672:15672"
+      - "15691:15691"
+      - "15692:15692"
+      - "25672:25672"
+      - "4369:4369"
+      - "5671:5671"
+      - "5672:5672"
+      - "1883:1883"
+
+volumes:
+  rabbit_prod:
+    name: rabbit_prod
+    driver: local
