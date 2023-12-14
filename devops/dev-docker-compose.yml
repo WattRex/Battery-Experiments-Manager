@@ -18,8 +18,8 @@ services:
       service: wattrex_mn_manager
     build:
       args:
-        - test_pypi_flag=--index-url https://test.pypi.org/simple/
-    image: javibu13/wattrex-web-server:dev-latest
+        - test_pypi_flag=--extra-index-url https://test.pypi.org/simple/
+    image: javibu13/wattrex-mn-manager:dev-latest
     depends_on:
       - wattrex_db
 
