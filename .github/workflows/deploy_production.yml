@@ -24,7 +24,6 @@ jobs:
     name: Publish package ${{ vars.MN_MANAGER_PACKAGE_NAME }} to PyPi
     needs: build-package-on-pull-request
     runs-on: ubuntu-latest
-    environment: production
     permissions:
       id-token: write
 
