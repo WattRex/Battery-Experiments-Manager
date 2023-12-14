@@ -1,0 +1,44 @@
+# This workflow deploy system tools to production environment
+
+name: deploy PRODUCTION
+
+on:
+  pull_request_review:
+    types:
+      - submitted
+
+jobs:
+
+  build-package-on-pull-request:
+    if: ${{ github.event_name == 'pull_request_review' && github.event.review.state == 'approved' && github.event.pull_request.head.ref == 'develop' && github.event.pull_request.base.ref == 'master' }}
+    name: Build package ${{ vars.MN_MANAGER_PACKAGE_NAME }}
+    uses: WattRex/System-Tools/.github/workflows/build_python_package.yml@develop
+    with:
+      package-name: ${{ vars.MN_MANAGER_PACKAGE_NAME }}
+      package-path: mn_manager
+      source-path: mn_manager/src/wattrex_mn_manager
+      python-version: "3.10"
+      is-test-package: false
+
+  publish-package:
+    name: Publish package ${{ vars.MN_MANAGER_PACKAGE_NAME }} to PyPi
+    needs: build-package-on-pull-request
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download a single artifact
+        uses: actions/download-artifact@v3
+        with:
+          name:  ${{ vars.MN_MANAGER_PACKAGE_NAME }}
+          path: ${{ vars.MN_MANAGER_PACKAGE_NAME }}/dist/
+
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@f8c70e705ffc13c3b4d1221169b84f12a75d6ca8
+        with:
+          verbose: true
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages-dir: "${{ vars.MN_MANAGER_PACKAGE_NAME }}/dist/"
