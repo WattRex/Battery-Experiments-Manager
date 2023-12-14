@@ -1,10 +1,8 @@
 name: Docker Image CI
 
 on:
-  #workflow_call:
   push:
-
-  workflow_dispatch:
+  workflow_call:
     inputs:
       dockerfile-path:
         description: Path to the dockerfile
@@ -16,6 +14,11 @@ on:
         required: true
         type: string
 
+      is-develop:
+        description: Flag to indicate if the image is for develop or master branch
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   push_to_registry:
@@ -37,13 +40,24 @@ jobs:
         with:
           images: mariuscrsn79/wattrex-master-node-manager #${{ inputs.docker-repo-name }}
 
-      - name: Build and push Docker image
+      - name: Build and push Docker (develop image)
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        if: ${{ inputs.is-develop == true }}
         with:
           context: .
           file: devops/mn_manager/Dockerfile.mn_manager #${{ inputs.dockerfile-path }
           push: true
           build-args: |
             test_pypi_flag=--extra-index-url https://test.pypi.org/simple/
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Build and push Docker (production image)
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        if: ${{ inputs.is-develop == false }}
+        with:
+          context: .
+          file: devops/mn_manager/Dockerfile.mn_manager #${{ inputs.dockerfile-path }
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
