@@ -64,6 +64,8 @@ jobs:
       dockerfile-path: ./devops/mn_manager/Dockerfile.mn_manager
       docker-repo-name: wattrex-mn-manager-dev
       is-develop: true
+      docker-user: ${{ secrets.DOCKER_USERNAME_JAVI }}
+      docker-pass: ${{ secrets.DOCKER_PASSWORD_JAVI }}
 
   publish-DEV-docker-image-web-server:
     name: Publish web-server docker image
@@ -73,3 +75,5 @@ jobs:
       dockerfile-path: ./devops/web_server/Dockerfile.web_server
       docker-repo-name: wattrex-web-server-dev
       is-develop: true
+      docker-user: ${{ secrets.DOCKER_USERNAME_JAVI }}
+      docker-pass: ${{ secrets.DOCKER_PASSWORD_JAVI }}
