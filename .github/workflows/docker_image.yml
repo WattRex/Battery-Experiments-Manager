@@ -56,7 +56,7 @@ jobs:
         if: ${{ inputs.is-develop == false }}
         with:
           context: .
-          file: ${{ inputs.dockerfile-path }
+          file: ${{ inputs.dockerfile-path }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
