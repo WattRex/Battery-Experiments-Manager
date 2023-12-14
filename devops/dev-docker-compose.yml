@@ -19,6 +19,7 @@ services:
     build:
       args:
         - test_pypi_flag=--index-url https://test.pypi.org/simple/
+    image: javibu13/wattrex-web-server:dev-latest
     depends_on:
       - wattrex_db
 
@@ -29,6 +30,7 @@ services:
     build:
       args:
         - test_pypi_flag=--index-url https://test.pypi.org/simple/
+    image: javibu13/wattrex-web-server:dev-latest
     ports:
       - "8869:8000"
     depends_on:
