@@ -59,17 +59,21 @@ jobs:
   publish-DEV-docker-image-mn-manager:
     name: Publish mn-manager docker image
     needs: publish-package
-    uses: WattRex/Battery-Experiments-Manager/.github/workflow/docker_image.yml@mn_manager
+    uses: ./.github/workflows/docker_image.yml
+    secrets: inherit
     with:
       dockerfile-path: ./devops/mn_manager/Dockerfile.mn_manager
       docker-repo-name: wattrex-mn-manager-dev
       is-develop: true
+      docker-user: ${{ vars.DOCKER_USERNAME_JAVI }}
 
   publish-DEV-docker-image-web-server:
     name: Publish web-server docker image
     if: ${{ github.event_name == 'pull_request_review' && github.event.review.state == 'approved' && github.event.pull_request.head.ref == 'web_server'}}
-    uses: WattRex/Battery-Experiments-Manager/.github/workflow/docker_image.yml@web_server
+    uses: ./.github/workflows/docker_image.yml
+    secrets: inherit
     with:
       dockerfile-path: ./devops/web_server/Dockerfile.web_server
       docker-repo-name: wattrex-web-server-dev
       is-develop: true
+      docker-user: ${{ vars.DOCKER_USERNAME_JAVI }}

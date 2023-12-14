@@ -8,6 +8,7 @@ on:
         required: true
         type: string
 
+
       docker-repo-name:
         description: Name of docker hub repository used to push the image
         required: true
@@ -18,6 +19,16 @@ on:
         required: false
         type: boolean
         default: true
+
+      docker-user:
+        description: Docker hub username
+        required: true
+        type: string
+
+    secrets:
+      DOCKER_PASSWORD_JAVI:
+        description: Docker hub password
+        required: true
 
 jobs:
   push_to_registry:
@@ -30,14 +41,14 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
         with:
-          username: ${{ secrets.DOCKER_USERNAME_JAVI }}
+          username: ${{ inputs.docker-user }}
           password: ${{ secrets.DOCKER_PASSWORD_JAVI }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
-          images: javibu13/${{ inputs.docker-repo-name }}
+          images: ${{ inputs.docker-user }}/${{ inputs.docker-repo-name }}
 
       - name: Build and push Docker (develop image)
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
@@ -56,7 +67,7 @@ jobs:
         if: ${{ inputs.is-develop == false }}
         with:
           context: .
-          file: ${{ inputs.dockerfile-path }
+          file: ${{ inputs.dockerfile-path }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
