@@ -1,0 +1,5 @@
+system-logger-tool
+system-shared-tool
+wattrex-battery-cycler-datatypes
+wattrex-driver-mqtt
+wattrex-driver-db>=0.0.16

@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+{% load static %}
+
+
+{% block page_content %}
+
+    <style>
+        input { 
+            /*text-align: right; */
+        }
+
+        .RedoxStack {
+            /*visibility: hidden;*/
+            display: none;
+        }
+
+        .Lithium {
+            /*visibility: hidden;*/
+            display: none;
+        }
+
+        .LeadAcid {
+            /*visibility: hidden;*/
+            display: none;
+        }
+    </style>
+
+    <div class="container-fluid">
+        <div class="bg-light mainPanel">
+            <form method="post" action="" enctype="multipart/form-data" name="mainForm" id="mainForm">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-lg-6 col-xl-6" style="padding-right: 0px">  {# LEFT FORM PANEL #}
+                        <div class="row" style="width: 100%">
+                        
+                            <div class="form-group col-12 col-sm-6 col-md-6">
+                                <label for="batTechnology">Technology</label>
+                                <select name="batTechnology_input" id="batTechnology" class="selectInput" data-title="Select Technology..." data-live-search="true" data-width="100%" data-size="8" required>
+                                    {% for technology in technologies %}
+                                        <option data-tokens="{{ technology }}" value="{{ technology }}" label="{{ technology }}">{{ technology }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group col-12 col-sm-6 col-md-6">
+                                <label for="batSerialNumber">Serial Number</label>
+                                <input type="text" minlength="1" maxlength="30" class="form-control marginBottom textInput" name="batSerialNumber_input" id="batSerialNumber" placeholder="" required>
+                            </div>
+
+                            <div class="form-group col-12 col-sm-6 col-md-6">
+                                <label for="batName">Name</label>
+                                <input type="text" minlength="1" maxlength="30" class="form-control marginBottom textInput" name="batName_input" id="batName" placeholder="" required>
+                            </div>
+
+                            <div class="form-group col-12 col-sm-6 col-md-6">
+                                <label for="batManufacturer">Manufacturer</label>
+                                <input type="text" minlength="1" maxlength="20" class="form-control marginBottom textInput" name="batManufacturer_input" id="batManufacturer" list="manufacturers_datalist" placeholder="" required>
+                                <datalist id="manufacturers_datalist">
+                                {% for manufacturer in manufacturers %}
+                                    <option value="{{ manufacturer }}">
+                                {% endfor %}
+                                </datalist>
+                            </div>
+
+                            <div class="form-group col-12 col-sm-6 col-md-6">
+                                <label for="batModel">Model</label>
+                                <input type="text" minlength="1" maxlength="20" class="form-control marginBottom textInput" name="batModel_input" id="batModel" placeholder="" list="models_datalist" required>
+                                <datalist id="models_datalist">
+                                {% for model in models %}
+                                    <option value="{{ model }}">
+                                {% endfor %}
+                                </datalist>
+                            </div>
+
+                            <div class="form-group col-12 col-sm-6 col-md-6">
+                                <label for="batCellsNumber">Cells Number</label>
+                                <input type="number" min="1" value="1" class="form-control marginBottom numberInput intInput" name="batCellsNumber_input" id="batCellsNumber" placeholder="" required>
+                            </div>
+
+                            <div class="form-group col-12 marginBottom"> <!-- Date input -->
+                                <label for="batFabricationDate">Fabrication Date</label>
+                                <input class="form-control textInput " id="batFabricationDate" name="batFabricationDate_input" placeholder="dd/mm/yyyy" type="text"/>
+                            </div>
+
+                            <div class="form-group col-12">
+                                <label for="batDescription">Description</label>
+                                <textarea class="form-control marginBottom textInput" rows="6" name="batDescription_input" id="batDescription" maxlength="250" required></textarea>
+                            </div>                            
+                        </div>
+                    </div>                                      {# LEFT FORM PANEL #}
+                    <div class="col-lg-6 col-xl-6" style="padding-left: 0px">  {# RIGHT FORM PANEL #}
+                        <div class="row">
+                            <div class="form-group col-12 col-sm-6 col-md-6">
+                                <label for="batMinCellVoltage">Min Cell Voltage [V]</label>
+                                <input type="decimal" min="0" minlength="1" maxlength="30" class="form-control marginBottom numberInput floatInput volt min" name="batMinCellVoltage_input" id="batMinCellVoltage" placeholder="" required>
+                            </div>
+
+                            <div class="form-group col-12 col-sm-6 col-md-6">
+                                <label for="batMaxCellVoltage">Max Cell Voltage [V]</label>
+                                <input type="decimal" min="0" minlength="1" maxlength="30" class="form-control marginBottom numberInput floatInput volt max" name="batMaxCellVoltage_input" id="batMaxCellVoltage" placeholder="" required>
+                            </div>
+
+                            <div class="form-group col-12 col-sm-6 col-md-6">
+                                <label for="batMinVoltage">Min Total Voltage [V]</label>
+                                <input type="decimal" min="0" minlength="1" maxlength="30" class="form-control marginBottom numberInput floatInput volt min" name="batMinVoltage_input" id="batMinVoltage" placeholder="" required>
+                            </div>
+
+                            <div class="form-group col-12 col-sm-6 col-md-6">
+                                <label for="batMaxVoltage">Max Total Voltage [V]</label>
+                                <input type="decimal" min="0" minlength="1" maxlength="30" class="form-control marginBottom numberInput floatInput volt max" name="batMaxVoltage_input" id="batMaxVoltage" placeholder="" required>
+                            </div>
+
+                            <div class="form-group col-12 col-sm-6 col-md-6">
+                                <label for="batMinCurrent">Min Current [A]</label>
+                                <input type="decimal" minlength="1" maxlength="30" class="form-control marginBottom numberInput floatInput" name="batMinCurrent_input" id="batMinCurrent" placeholder="" required>
+                            </div>
+
+                            <div class="form-group col-12 col-sm-6 col-md-6">
+                                <label for="batMaxCurrent">Max Current [A]</label>
+                                <input type="decimal" minlength="1" maxlength="30" class="form-control marginBottom numberInput floatInput" name="batMaxCurrent_input" id="batMaxCurrent" placeholder="" required>
+                            </div>
+
+                            <div class="form-group col-12 col-sm-6 col-md-6 Lithium">
+                                <label for="batCapacityLithium">Capacity [Ah]</label>
+                                <input type="decimal" min="0" minlength="1" maxlength="30" class="form-control marginBottom Lithium numberInput floatInput" name="batCapacityLithium_input" id="batCapacityLithium" placeholder="" required>
+                            </div>
+
+                            <div class="form-group col-12 col-sm-6 col-md-6 LeadAcid">
+                                <label for="batCapacityLeadAcid">Capacity [Ah]</label>
+                                <input type="decimal" min="0" minlength="1" maxlength="30" class="form-control marginBottom LeadAcid numberInput floatInput" name="batCapacityLeadAcid_input" id="batCapacityLeadAcid" placeholder="" required>
+                            </div>
+
+                            <div class="form-group col-12 col-sm-6 col-md-6 Lithium">
+                                <label for="batChemistryLithium">Chemistry</label>
+                                <select name="batChemistryLithium_input" id="batChemistryLithium" class="selectInput marginBottom Lithium" data-title="Select Lithium Chemistry..." data-live-search="true" data-width="100%" data-size="8" required>
+                                    {% for chemistry in chemistries.lithium %}
+                                        <option data-tokens="{{ chemistry }}" value="{{ chemistry }}" label="{{ chemistry }}">{{ chemistry }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group col-12 col-sm-6 col-md-6 LeadAcid">
+                                <label for="batChemistryLeadAcid">Chemistry</label>
+                                <select name="batChemistryLeadAcid_input" id="batChemistryLeadAcid" class="selectInput LeadAcid marginBottom" data-title="Select LeadAcid Chemistry..." data-live-search="true" data-width="100%" data-size="8" required>
+                                    {% for chemistry in chemistries.leadacid %}
+                                        <option data-tokens="{{ chemistry }}" value="{{ chemistry }}" label="{{ chemistry }}">{{ chemistry }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group col-12 col-sm-6 col-md-6 RedoxStack">
+                                <label for="redoxElectrodeComposition">Electrode Composition</label>
+                                <input type="text" minlength="1" maxlength="30" class="form-control marginBottom textInput RedoxStack" name="redoxElectrodeComposition_input" id="redoxElectrodeComposition" placeholder="" list="electrodeCompositions_datalist" required>
+                                <datalist id="electrodeCompositions_datalist">
+                                {% for electrodeComposition in electrodeCompositions %}
+                                    <option value="{{ electrodeComposition }}">
+                                {% endfor %}
+                                </datalist>
+                            </div>
+
+                            <div class="form-group col-12 col-sm-6 col-md-6 RedoxStack">
+                                <label for="redoxBipolarType">Bipolar Type</label>
+                                <select name="redoxBipolarType_input" id="redoxBipolarType" class="selectInput marginBottom RedoxStack" data-title="Select Bipolar..." data-live-search="true" data-width="100%" data-size="8" required>
+                                    {% for bipolar in redox_stack.bipolar_type %}
+                                        <option data-tokens="{{ bipolar }}" value="{{ bipolar }}" >{{ bipolar|title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group col-12 col-sm-6 col-md-6 RedoxStack">
+                                <label for="redoxElectrodeSize">Electrode Size [cm²]</label>
+                                <input type="decimal" min="0" step="any" class="form-control marginBottom numberInput floatInput RedoxStack" name="redoxElectrodeSize_input" id="redoxElectrodeSize" placeholder="" required>
+                            </div>
+                            
+                            <div class="form-group col-12 col-sm-6 col-md-6 RedoxStack">
+                                <label for="redoxMembraneType">Membrane Type</label>
+                                <select name="redoxMembraneType_input" id="redoxMembraneType" class="selectInput marginBottom RedoxStack" data-title="Select Membrane..." data-live-search="true" data-width="100%" data-size="8" required>
+                                    {% for membrane in redox_stack.membrane_type %}
+                                        <option data-tokens="{{ membrane }}" value="{{ membrane }}" >{{ membrane|title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group col-12 col-sm-6 col-md-6 RedoxStack">
+                                <label for="redoxElectrolyteType">Electrolyte Type</label>
+                                <select name="redoxElectrolyteType_input" id="redoxElectrolyteType" class="selectInput marginBottom RedoxStack" data-title="Select Electrolyte..." data-live-search="true" data-width="100%" data-size="8" required>
+                                    {% for electrolyte in redox_stack.electrolyte_type %}
+                                        <option data-tokens="{{ electrolyte }}" value="{{ electrolyte }}" >{{ electrolyte|title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                        </div>
+                    </div>                                      {# RIGHT FORM PANEL #}
+                </div>
+
+                <div class="row">
+                    <div class="col-1 col-lg-7">
+                        <button type="button" id="btnSubmit" class="btn btn-primary" style="margin-bottom: 20px;">Submit</button>
+                        {% comment %} <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#redoxElectrolyteInputsGroup" aria-expanded="false" aria-controls="collapseExample">
+                            Button with data-target
+                          </button> {% endcomment %}
+                    </div>
+                    
+
+                    <div class="col-11 col-lg-5">
+
+                    </div>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+    <script type="text/javascript" src="{% static 'bootstrap-select.min.js'%} "></script>   {#  https://developer.snapappointments.com/bootstrap-select/  #}
+    <script type="text/javascript" src="{% static 'bootstrap-datepicker/js/bootstrap-datepicker.min.js'%}"></script>
+    <link rel="stylesheet" href="{% static 'bootstrap-datepicker/css/bootstrap-datepicker3.css'%}"/>
+
+
+    <script>
+
+
+
+/* ___   ___   _   _   ___   _____  _____ ______  _____ ______  _____ 
+  |_  | / _ \ | | | | / _ \ /  ___|/  __ \| ___ \|_   _|| ___ \|_   _|
+    | |/ /_\ \| | | |/ /_\ \\ `--. | /  \/| |_/ /  | |  | |_/ /  | |  
+    | ||  _  || | | ||  _  | `--. \| |    |    /   | |  |  __/   | |  
+/\__/ /| | | |\ \_/ /| | | |/\__/ /| \__/\| |\ \  _| |_ | |      | |  
+\____/ \_| |_/ \___/ \_| |_/\____/  \____/\_| \_| \___/ \_|      \_/  */
+
+
+        const batTechnology = document.getElementById("batTechnology");
+        batTechnology.addEventListener("change", toggleInputs);
+        $('#batTechnology').selectpicker();
+        $('#batTechnology').addClass("no-oculto");
+
+        const batChemistryLithium = document.getElementById("batChemistryLithium");
+        $('#batChemistryLithium').selectpicker();
+        
+        const batChemistryLeadAcid = document.getElementById("batChemistryLeadAcid");
+        $('#batChemistryLeadAcid').selectpicker();
+
+        const redoxBipolarType = document.getElementById("redoxBipolarType");
+        $('#redoxBipolarType').selectpicker();
+        
+        const redoxMembraneType = document.getElementById("redoxMembraneType");
+        $('#redoxMembraneType').selectpicker();
+
+        const redoxElectrolyteType = document.getElementById("redoxElectrolyteType");
+        $('#redoxElectrolyteType').selectpicker();
+
+        $(".intInput").on("focusout", function(){
+            checkNumber(this, 'int');
+        });
+
+        $(".floatInput").on("focusout", function(){
+            checkNumber(this, 'float');
+        });
+
+        function checkNumber(ele, type) {
+            if (ele.value != 0) {
+                if(type == 'int'){
+                    ele.value = parseInt(ele.value)||"";
+                } else if (type == 'float') {
+                    ele.value = parseFloat(ele.value)||"";
+                }
+                if (ele.value > 8388) {
+                    ele.value = 8388;
+                } else if ((ele.value < -8388)) {
+                    ele.value = -8388;
+                }
+            }
+        };
+        
+        var date_input=$('input[name="batFabricationDate_input"]'); //our date input has the name "date"
+        var options={
+            format: "yyyy/mm/dd",
+            weekStart: 1,
+            todayHighlight: true,
+            autoclose: true,
+            orientation: "auto right",
+            startDate: "1780/01/01",
+            endDate: "today",
+        };
+        date_input.datepicker(options);
+
+        $('#batSerialNumber').on('focusout', function(){
+            if ($('#batName').val() === "") {
+                $('#batName').val($('#batSerialNumber').val());
+            }
+        });
+
+        $('#batCellsNumber').on('change', function(){
+            $('.volt').val('');
+        });
+
+        $('.volt').on('focusout', function(e){
+            if ($('#batCellsNumber').val() == 1) {
+                if ($('#' + e.currentTarget.id).hasClass('max')) {
+                    $('.volt.max').val(e.currentTarget.value);
+                }
+                else if ($('#' + e.currentTarget.id).hasClass('min')) {
+                    $('.volt.min').val(e.currentTarget.value);
+                }
+                //console.log(e.currentTarget.value);
+            }
+        });
+
+        function toggleInputs() {
+            switch (batTechnology.value) {
+                case "Lithium":
+                    $('.Lithium').css('display', 'block');
+                    $('select.Lithium').addClass('no-oculto');
+                    $('.LeadAcid').css('display', 'none');
+                    $('select.LeadAcid').removeClass('no-oculto');
+                    $('.RedoxStack').css('display', 'none');
+                    $('select.RedoxStack').removeClass('no-oculto');
+                    break;
+                case "LeadAcid":
+                    $('.Lithium').css('display', 'none');
+                    $('select.Lithium').removeClass('no-oculto');
+                    $('.LeadAcid').css('display', 'block');
+                    $('select.LeadAcid').addClass('no-oculto');
+                    $('.RedoxStack').css('display', 'none');
+                    $('select.RedoxStack').removeClass('no-oculto');
+                    break;
+                case "RedoxStack":
+                    $('.Lithium').css('display', 'none');
+                    $('select.Lithium').removeClass('no-oculto');
+                    $('.LeadAcid').css('display', 'none');
+                    $('select.LeadAcid').removeClass('no-oculto');
+                    $('.RedoxStack').css('display', 'block');
+                    $('select.RedoxStack').addClass('no-oculto');
+                    break;
+                default:
+                    $('.Lithium').css('display', 'none').removeClass('no-oculto');
+                    $('.LeadAcid').css('display', 'none').removeClass('no-oculto');
+                    $('.RedoxStack').css('display', 'none').removeClass('no-oculto');
+                    break;
+            }
+        }
+
+        document.getElementById("btnSubmit").addEventListener("click", createBattery);
+
+        function existsInDatabase(table_name, column_orm, value_to_check){
+            let result;
+            $.ajax({
+                async: false,
+                type: "POST",
+                url: "{% url 'validate-field' %}",
+                // contentType: "application/json; charset=utf-8",
+                data: { csrfmiddlewaretoken: '{{ csrf_token }}',
+                        table: table_name,
+                        column: column_orm,
+                        value: value_to_check,
+                    },
+                success:  function(response){
+                    response = JSON.parse(response);
+                    console.log('AJAX (exists_in_database) ' + response['exists']);
+                    result = response['exists'];
+                },
+            });
+            if (result){
+                window.alert('"' + value_to_check + '" value already exists in the ' + column_orm.toUpperCase() + " field in database");
+            }
+            return result;
+        }
+        
+        function validateBattery() {
+            let listaFallos = [];
+            let validationState = true;
+            $(".textInput").each(function() {
+                if ($(this).css('display') !== 'none') {
+                    if (($(this).val() === "") || ($(this).attr('id') == "batName" && existsInDatabase('Battery', 'name', $(this).val())) || ($(this).attr('id') == "batSerialNumber" && existsInDatabase('Battery', 'sn', $(this).val()))) {
+                        $(this).addClass("is-invalid");
+                        validationState = false;
+                        listaFallos.push($(this));
+                    } else {
+                        $(this).removeClass("is-invalid");
+                    }
+                }
+            });
+
+            $(".numberInput").each(function() {
+                if ($(this).css('display') !== 'none') {
+                    if ($(this).val() === "" || ($(this).attr('min') == 0 && $(this).val() < 0) || ($(this).attr('min') == 1 && $(this).val() < 1)) {
+                        $(this).addClass("is-invalid");
+                        validationState = false;
+                        listaFallos.push($(this));
+                    } else {
+                        $(this).removeClass("is-invalid");
+                    }
+                }
+            });
+
+            $(".selectInput").each(function() {
+                if ($(this).hasClass("no-oculto")) {
+                    if ($(this).val() === "") {
+                        $(this).addClass("btn-light-invalid");
+                        validationState = false;
+                        listaFallos.push($(this));
+                    } else {
+                        $(this).removeClass("btn-light-invalid");
+                    }
+                }
+            });
+
+            
+
+            console.log(listaFallos);
+            console.log(validationState);
+            //window.alert("debug window -> Check console")
+            return validationState;
+        }
+
+        function createBattery() {
+            if (validateBattery()) {
+                // document.forms[0].action = "/equipment" + document.forms[0].elements.namedItem("expEquipment_input").value + "/";
+                document.forms[0].action = "/form_submit_battery";
+                document.forms[0].submit();
+            }
+        }
+
+        
+    </script>
+
+{% endblock %}

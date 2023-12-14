@@ -1,0 +1,55 @@
+version: '3.8'
+
+name: wattrex_mn_prod
+
+services:
+  wattrex_db:
+    image: mysql #:8.0.31-debian
+    container_name: wattrex_master_db
+    restart: always
+    ports:
+      - "3322:3306"
+    volumes:
+      - wattrex_db_data_prod:/var/lib/mysql
+      - ./master_db/createMasterCyclerTables.sql:/docker-entrypoint-initdb.d/createMasterCyclerTables.sql
+      - ./master_db/insertDeviceInfoToMaster.sql:/docker-entrypoint-initdb.d/insertDeviceInfoToMaster.sql
+    env_file:
+      - ./master_db/.cred.env
+
+  wattrex_mn_manager:
+    build:
+      context: ../
+      dockerfile: ./devops/mn_manager/Dockerfile.mn_manager
+    image: javibu13/wattrex-mn-manager:latest
+    container_name: wattrex_mn_manager
+    restart: always
+    ipc: host
+    volumes:
+      - ./mn_manager/log_config.yaml:/code/devops/mn_manager/log_config.yaml
+      - ./mn_manager/.cred.yaml:/code/devops/mn_manager/.cred.yaml
+    depends_on:
+      - wattrex_db
+
+  wattrex_web_server:
+    build:
+      context: ../
+      dockerfile: ./devops/web_server/Dockerfile.web_server
+    image: javibu13/wattrex-web-server:latest
+    container_name: wattrex_web_server
+    restart: always
+    ports:
+      - "8811:8000"
+    ipc: host
+    volumes:
+      - ../static/images:/code/static/images                                     # Linked to store graph images
+      - ./web_server/log_config.yaml:/code/log_config.yaml
+    env_file:
+      - ./web_server/.cred.env
+    depends_on:
+      - wattrex_db
+      - wattrex_mn_manager
+
+
+volumes:
+  wattrex_db_data_prod:
+    name: wattrex_db_data_prod

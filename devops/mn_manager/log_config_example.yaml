@@ -1,0 +1,16 @@
+---
+#YAML FILE START
+
+__main__: "INFO"
+
+##### DEV ######
+wattrex_mn_manager: "INFO"
+wattrex_driver_mqtt: "INFO"
+wattrex_driver_db: "INFO"
+
+##### SYS #####
+system_config_tool: "ERROR"
+system_logger_tool: "ERROR"
+system_shared_tool: "ERROR"
+
+file_handlers: {}

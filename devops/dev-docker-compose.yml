@@ -1,0 +1,43 @@
+version: '3.8'
+
+name: wattrex_mn_dev
+
+services:
+  wattrex_db:
+    extends:
+      file: ./docker-compose.yml
+      service: wattrex_db
+    ports:
+      - "3369:3306"
+    volumes:
+      - wattrex_db_data_dev:/var/lib/mysql
+
+  wattrex_mn_manager:
+    extends:
+      file: ./docker-compose.yml
+      service: wattrex_mn_manager
+    build:
+      args:
+        - test_pypi_flag=--extra-index-url https://test.pypi.org/simple/
+    image: javibu13/wattrex-mn-manager:dev-latest
+    depends_on:
+      - wattrex_db
+
+  wattrex_web_server:
+    extends:
+      file: ./docker-compose.yml
+      service: wattrex_web_server
+    build:
+      args:
+        - test_pypi_flag=--index-url https://test.pypi.org/simple/
+    image: javibu13/wattrex-web-server:dev-latest
+    ports:
+      - "8869:8000"
+    depends_on:
+      - wattrex_db
+      - wattrex_mn_manager
+
+
+volumes:
+  wattrex_db_data_dev:
+    name: wattrex_db_data_dev
