@@ -25,8 +25,14 @@ on:
         required: true
         type: string
 
-      docker-build-args:
-        description: Build arguments for docker image
+      docker-user-arg:
+        description: Build arguments for user docker image
+        required: false
+        type: string
+        default: ""
+
+      docker-group-arg:
+        description: Build arguments for group docker image
         required: false
         type: string
         default: ""
@@ -77,6 +83,7 @@ jobs:
           file: ${{ inputs.dockerfile-path }}
           push: true
           build-args: |
-            ${{ inputs.docker-build-args }}
+            USER=${{ inputs.docker-user-arg }}
+            GROUP=${{ inputs.docker-group-arg }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
