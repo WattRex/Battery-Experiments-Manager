@@ -25,6 +25,12 @@ on:
         required: true
         type: string
 
+      docker-build-args:
+        description: Build arguments for docker image
+        required: false
+        type: string
+        default: ""
+
     secrets:
       DOCKER_PASSWORD:
         description: Docker hub password
@@ -58,7 +64,7 @@ jobs:
           file: devops/mn_manager/Dockerfile.mn_manager #${{ inputs.dockerfile-path }
           push: true
           build-args: |
-            test_pypi_flag=--extra-index-url https://test.pypi.org/simple/
+            test_pypi_flag=--extra-index-url https://test.pypi.org/simple/ ${{ inputs.docker-build-args }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
