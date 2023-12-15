@@ -64,7 +64,8 @@ jobs:
           file: devops/mn_manager/Dockerfile.mn_manager #${{ inputs.dockerfile-path }
           push: true
           build-args: |
-            test_pypi_flag=--extra-index-url https://test.pypi.org/simple/ ${{ inputs.docker-build-args }}
+            test_pypi_flag=--extra-index-url https://test.pypi.org/simple/
+            ${{ inputs.docker-build-args }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
@@ -75,5 +76,7 @@ jobs:
           context: .
           file: ${{ inputs.dockerfile-path }}
           push: true
+          build-args: |
+            ${{ inputs.docker-build-args }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
