@@ -26,7 +26,7 @@ on:
         type: string
 
     secrets:
-      DOCKER_PASSWORD_JAVI:
+      DOCKER_PASSWORD:
         description: Docker hub password
         required: true
 
@@ -42,7 +42,7 @@ jobs:
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
         with:
           username: ${{ inputs.docker-user }}
-          password: ${{ secrets.DOCKER_PASSWORD_JAVI }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
