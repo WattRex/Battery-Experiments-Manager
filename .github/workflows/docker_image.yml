@@ -85,7 +85,7 @@ jobs:
           build-args: |
             test_pypi_flag=--extra-index-url https://test.pypi.org/simple/
             ${{ inputs.docker-build-args }}
-          tags: "latest,${{ steps.meta.outputs.tags }}"
+          # tags: "latest,${{ steps.meta.outputs.tags }}"
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Build and push Docker (production image)
@@ -98,6 +98,6 @@ jobs:
           build-args: |
             USER=${{ inputs.docker-user-arg }}
             GROUP=${{ inputs.docker-group-arg }}
-          tags: "latest,${{ steps.meta.outputs.tags }}"
+          # tags: "latest,${{ steps.meta.outputs.tags }}"
           labels: ${{ steps.meta.outputs.labels }}
           target: ${{ inputs.docker-target }}
