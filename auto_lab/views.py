@@ -16,7 +16,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from plotly import io as pio
 
-from wattrex_battery_cycler_datatypes.comm_data import CommDataMnCmdDataC, CommDataMnCmdTypeE
+from wattrex_cycler_datatypes.comm_data import CommDataMnCmdDataC, CommDataMnCmdTypeE
 from wattrex_mn_manager import MN_REQS_CHAN_NAME, MN_DATA_CHAN_NAME
 from system_shared_tool import SysShdIpcChanC
 
@@ -1222,7 +1222,7 @@ def requestRefreshDevices(request) -> HttpResponse:
             else:
                 print(f'Unexpected response: {refresh_confirm}')
                 response = HttpResponse(json.dumps({'status': 'ERROR', 'message': 'Unexpected response'}))
-        
+
     else:
         response = HttpResponse(json.dumps({'status': 'ERROR', 'message': 'No cu_id provided'}))
 

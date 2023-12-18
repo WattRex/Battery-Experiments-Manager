@@ -22,7 +22,7 @@ log: Logger = sys_log_logger_get_module_logger(__name__)
 #######################          MODULE IMPORTS          #######################
 
 #######################          PROJECT IMPORTS         #######################
-from wattrex_battery_cycler_datatypes.comm_data import CommDataCuC, CommDataHeartbeatC,\
+from wattrex_cycler_datatypes.comm_data import CommDataCuC, CommDataHeartbeatC,\
     CommDataDeviceC
 from wattrex_driver_db import DrvDbDetectedDeviceC, DrvDbSqlEngineC, DrvDbTypeE,\
                             DrvDbComputationalUnitC, DrvDbAvailableCuE, DrvDbConnStatusE
@@ -98,7 +98,7 @@ class DbFacadeC:
 
         Args:
             mac (int): [description]
-        
+
         Returns:
             result (int|None): CU_ID retrieved from database. None if not found
         '''
@@ -140,7 +140,7 @@ class DbFacadeC:
         '''
         stmt = update(DrvDbComputationalUnitC)\
                         .where(DrvDbComputationalUnitC.CUID == heartbeat.cu_id)\
-                        .values(LastConnection= heartbeat.timestamp)
+                        .values(LastConnection= datetime.utcnow())
         self.database.session.execute(stmt)
 
 
