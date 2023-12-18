@@ -37,6 +37,12 @@ on:
         type: string
         default: ""
 
+      docker-target:
+        description: Target for multi-stage docker build
+        required: false
+        type: string
+        default: ""
+
     secrets:
       DOCKER_PASSWORD:
         description: Docker hub password
@@ -93,3 +99,4 @@ jobs:
             GROUP=${{ inputs.docker-group-arg }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          target: ${{ inputs.docker-target }}
