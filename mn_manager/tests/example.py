@@ -21,7 +21,7 @@ log: Logger = sys_log_logger_get_module_logger(__name__)
 #######################          MODULE IMPORTS          #######################
 from wattrex_mn_manager import MnManagerNodeC, MN_REQS_CHAN_NAME
 
-from wattrex_battery_cycler_datatypes.comm_data import (CommDataMnCmdDataC, CommDataMnCmdTypeE)
+from wattrex_cycler_datatypes.comm_data import (CommDataMnCmdDataC, CommDataMnCmdTypeE)
 
 #######################          PROJECT IMPORTS         #######################
 from system_shared_tool import SysShdIpcChanC
