@@ -82,6 +82,7 @@ jobs:
             type=ref,event=tag
             type=ref,event=pr
             type=raw,value=master,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
+            type=raw,value=testing,enable=true
 
       - name: Build and push Docker (develop image)
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
@@ -93,7 +94,7 @@ jobs:
           build-args: |
             test_pypi_flag=--extra-index-url https://test.pypi.org/simple/
             ${{ inputs.docker-build-args }}
-          # tags: "latest,${{ steps.meta.outputs.tags }}"
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Build and push Docker (production image)
@@ -106,6 +107,6 @@ jobs:
           build-args: |
             USER=${{ inputs.docker-user-arg }}
             GROUP=${{ inputs.docker-group-arg }}
-          # tags: "latest,${{ steps.meta.outputs.tags }}"
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           target: ${{ inputs.docker-target }}
