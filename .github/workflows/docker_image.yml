@@ -25,8 +25,26 @@ on:
         required: true
         type: string
 
+      docker-user-arg:
+        description: Build arguments for user docker image
+        required: false
+        type: string
+        default: ""
+
+      docker-group-arg:
+        description: Build arguments for group docker image
+        required: false
+        type: string
+        default: ""
+
+      docker-target:
+        description: Target for multi-stage docker build
+        required: false
+        type: string
+        default: ""
+
     secrets:
-      DOCKER_PASSWORD_JAVI:
+      DOCKER_PASSWORD:
         description: Docker hub password
         required: true
 
@@ -38,17 +56,38 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v4
 
+      - name: Set up GCC
+        uses: egor-tensin/setup-gcc@v1
+        with:
+          version: latest
+          platform: x64
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Log in to Docker Hub
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
         with:
           username: ${{ inputs.docker-user }}
-          password: ${{ secrets.DOCKER_PASSWORD_JAVI }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: ${{ inputs.docker-user }}/${{ inputs.docker-repo-name }}
+          flavor: |
+            latest=true
+            prefix=
+            suffix=
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
+            type=raw,value=master,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
 
       - name: Build and push Docker (develop image)
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
@@ -59,15 +98,21 @@ jobs:
           push: true
           build-args: |
             test_pypi_flag=--extra-index-url https://test.pypi.org/simple/
+            ${{ inputs.docker-build-args }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Build and push Docker (production image)
-        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        uses: docker/build-push-action@v5
         if: ${{ inputs.is-develop == false }}
         with:
           context: .
           file: ${{ inputs.dockerfile-path }}
           push: true
+          build-args: |
+            USER=${{ inputs.docker-user-arg }}
+            GROUP=${{ inputs.docker-group-arg }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          target: ${{ inputs.docker-target }}
+          platforms: linux/amd64,linux/arm64

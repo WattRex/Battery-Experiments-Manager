@@ -86,7 +86,7 @@ create table if not exists CompatibleDevices
     constraint CompatibleDevices_pk_1
         primary key (CompDevID),
     constraint CompatibleDevices_unq_1
-        unique (Name, Manufacturer, DeviceType)
+        unique (Name, Manufacturer, Model, DeviceType)
 );
 
 
@@ -133,7 +133,7 @@ create table if not exists CyclerStation
     RegisterDate    datetime                    not null,
     Parent          mediumint       unsigned        null,
     Deprecated      boolean                     not null,
-    
+
     constraint CycleStation_pk_1
         primary key (CSID),
     constraint CycleStation_fk_1
@@ -277,7 +277,7 @@ create table if not exists Status
     Timestamp       datetime                    not null,
     Status          enum ('OK', 'COMM_ERROR', 'INTERNAL_ERROR') not null,
     ErrorCode       smallint        unsigned    not null,
-    
+
     constraint Status_pk_1
         primary key (StatusID, ExpID),
     constraint Status_fk_1
@@ -298,7 +298,7 @@ create table if not exists RedoxElectrolyte
     MinFlowRate     mediumint       unsigned    not null,
     MaxFlowRate     mediumint       unsigned    not null,
 
-    constraint RedoxElectrolyte_pk_1 
+    constraint RedoxElectrolyte_pk_1
         primary key (ExpID, BatID, Polarity),
     constraint RedoxElectrolyte_fk_1
         foreign key (ExpID) references Experiment (ExpID),
@@ -353,7 +353,7 @@ create table if not exists ExtendedMeasures
     UsedMeasID      mediumint       unsigned    not null,
     Value           mediumint                   not null,
 
-    constraint ExtendedMeasures_pk_1 
+    constraint ExtendedMeasures_pk_1
         primary key (ExpID, MeasID, UsedMeasID),
     constraint ExtendedMeasures_fk_1
         foreign key (ExpID, MeasID) references GenericMeasures (ExpID, MeasID),
