@@ -28,6 +28,10 @@ from wattrex_driver_mqtt import DrvMqttDriverC
 #######################          MODULE IMPORTS          #######################
 
 #######################              ENUMS               #######################
+
+######################             CONSTANTS              ######################
+from .context import (DEFAULT_CRED_FILEPATH)
+
 _REGISTER_TOPIC = '/register'
 _INFORM_TOPIC = '/inform_reg'
 _SUFFIX_RX_DET_DEV = '/detected_dev'
@@ -46,7 +50,7 @@ class BrokerClientC():
                  inform_dev_cb : Callable, avail_cus : List[int]) -> None:
 
         self.mqtt : DrvMqttDriverC = DrvMqttDriverC(error_callback=error_callback,
-                                                    cred_path='./devops/mn_manager/.cred.yaml')
+                                                    cred_path=DEFAULT_CRED_FILEPATH)
 
         self.__register_cb : Callable = register_cb
         self.__heartbeat_cb : Callable = heartbeat_cb
