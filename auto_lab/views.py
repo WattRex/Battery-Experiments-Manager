@@ -456,7 +456,6 @@ def applyExperimentsFilters(request):
         'profile': json.loads(post_dict['filters_profile'][0]),
     }
 
-
     batteries = []
     if len(filters['battery']) > 0:
         if len(filters['technology']) > 0:
@@ -497,7 +496,7 @@ def applyExperimentsFilters(request):
         'battery_list': [{'id' : battery.bat_id, 'name' : battery.name, 'tech' : battery.tech} for battery in batteries],
         'cycle_station_list': [{'id' : cycle_station.cs_id, 'name' : cycle_station.name} for cycle_station in cycle_stations],
         'profile_list': [{'id' : profile.prof_id, 'name' : profile.name} for profile in profiles],
-        'experiment_list': [{'id' : experiment.exp_id, 'name' : experiment.name, 'description' : experiment.description, 'date_begin' : experiment.date_begin.strftime("%Y/%m/%d, %H:%M:%S") if experiment.date_begin is not None else None, 'date_finish' : experiment.date_finish.strftime("%Y/%m/%d, %H:%M:%S") if experiment.date_finish is not None else None, 'status' : experiment.status} for experiment in experiments_list],
+        'experiment_list': [{'id' : experiment.exp_id, 'sn' : experiment.bat_id.sn, 'name' : experiment.name, 'description' : experiment.description, 'date_begin' : experiment.date_begin.strftime("%Y/%m/%d, %H:%M:%S") if experiment.date_begin is not None else None, 'date_finish' : experiment.date_finish.strftime("%Y/%m/%d, %H:%M:%S") if experiment.date_finish is not None else None, 'status' : experiment.status} for experiment in experiments_list],
         'bats': list(bats),
         'stations': list(stations),
         'profs': list(prof),

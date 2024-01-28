@@ -104,7 +104,7 @@
                                     <div class="align-items-center" style="display: flex">
                                         <select name="expBattery_input" id="expBattery" class="" data-title="Select Battery..." data-width="100%" data-live-search="true" data-size="8" required>
                                             {% for battery in batteries %}
-                                                <option data-tokens="{{ battery.tech }}" value="{{ battery.bat_id }}" label="{{ battery.tech }}">{{ battery.name|title }}</option>
+                                            <option data-tokens="{{ battery.tech }} {{ battery.name }}" value="{{ battery.bat_id }}" label="{{ battery.tech }}">{{ battery.sn }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
@@ -154,8 +154,8 @@
                                         <div class="col-6" style="min-height: 100%; min-height: 100%; padding-left: 22px; padding-top: 7px; padding-bottom: 7px;">
                                             <div id="shadowProfileDiv" class="profileSelectorAddExperiments bg-light" >
                                                 <ul id="ulProfileSelector" class="profileSelector">
-            
-            
+
+
 
                                                 </ul>
                                             </div>
@@ -188,7 +188,7 @@
                                                     // Used to remove empty lines () from the contenteditable div when focus is lost
                                                     jQuery(function($){
                                                         $(".editable-div").focusout(function(){
-                                                            var element = $(this);        
+                                                            var element = $(this);
                                                             if (!element.text().replace(" ", "").length) {
                                                                 element.empty();
                                                             }
@@ -229,7 +229,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
 
                     </div>                                      {# CENTRAL FORM PANEL #}
                     <div class="col-lg-12 col-xl-4">                                         {# RIGHT FORM PANEL #}
@@ -263,7 +263,7 @@
                     <div class="col-1 col-lg-7">
                         <button type="button" id="btnSubmit" class="btn btn-primary" style="margin-bottom: 20px;">Submit</button>
                     </div>
-                    
+
 
                     <div class="col-11 col-lg-5">
 
@@ -282,11 +282,11 @@
 
 
 
-/* ___   ___   _   _   ___   _____  _____ ______  _____ ______  _____ 
+/* ___   ___   _   _   ___   _____  _____ ______  _____ ______  _____
   |_  | / _ \ | | | | / _ \ /  ___|/  __ \| ___ \|_   _|| ___ \|_   _|
-    | |/ /_\ \| | | |/ /_\ \\ `--. | /  \/| |_/ /  | |  | |_/ /  | |  
-    | ||  _  || | | ||  _  | `--. \| |    |    /   | |  |  __/   | |  
-/\__/ /| | | |\ \_/ /| | | |/\__/ /| \__/\| |\ \  _| |_ | |      | |  
+    | |/ /_\ \| | | |/ /_\ \\ `--. | /  \/| |_/ /  | |  | |_/ /  | |
+    | ||  _  || | | ||  _  | `--. \| |    |    /   | |  |  __/   | |
+/\__/ /| | | |\ \_/ /| | | |/\__/ /| \__/\| |\ \  _| |_ | |      | |
 \____/ \_| |_/ \___/ \_| |_/\____/  \____/\_| \_| \___/ \_|      \_/  */
 
 
@@ -309,7 +309,7 @@
         document.getElementById("profileFile").addEventListener("change", getFileUploaded);
 
         expBattery.addEventListener("change", toggleRedoxStackInputs, true);
-        
+
         $('#expBattery').selectpicker();
         $('#expExtendedMeasures').selectpicker();
 
@@ -350,7 +350,7 @@
                         console.log(validateTextProfile(displayer.result));
                     }
                     displayer.readAsText(profileFile);
-                    
+
                 } else {
                     document.getElementById("profileUpload_textArea").innerHTML = "INVALID FILE TYPE. " +
                     "PLEASE, SELECT A .TXT FILE";
@@ -429,7 +429,7 @@
                 reader.onload = function(e) {
                     let text = reader.result;                 // the entire file
 
-                    let firstLine = text.split('\n').shift(); // first line 
+                    let firstLine = text.split('\n').shift(); // first line
 
                     console.log(firstLine);                   // use the console for debugging
 
@@ -437,7 +437,7 @@
                     headers = firstLine.split(',').map(function(item) {
                         return item.replace(/"/g, '').trim().toLowerCase();
                     });
-                    console.log(headers);                    
+                    console.log(headers);
                 }
                 reader.readAsText(csv_file, 'UTF-8');
 
@@ -453,7 +453,7 @@
         }
 
         ///////////
-        
+
 
 
         var profileFile = null;
@@ -492,7 +492,7 @@
         function displayProfileViewer(textToDisplay) {
             document.getElementById("profileDisplay_textArea").innerHTML = textToDisplay;
         }
-        
+
         function displayProfileDescription(textToDisplay) {
             document.getElementById("profileDescription_textArea").innerHTML = textToDisplay;
         }
@@ -501,7 +501,7 @@
             document.getElementById("profileDisplay_textArea").classList.remove("is-invalid");
             displayProfileViewer(document.getElementById(html_id + '_instr').innerText.replaceAll('|', '&#13;'));
             displayProfileDescription(document.getElementById(html_id + '_description').innerText);
-            
+
         }
 
         function validateTextProfile(text_to_validate) {
@@ -510,11 +510,11 @@
             $.ajax({
                 async: false,
                 type: "POST",
-                url: "{% url 'validate-profile' %}",   
+                url: "{% url 'validate-profile' %}",
                 data: {csrfmiddlewaretoken: '{{ csrf_token }}',
                       text: text_to_validate, /* Passing the text data */
                       battery_selected: battery_selected,
-                      cycler_station_selected: 1},   
+                      cycler_station_selected: 1},
                 success:  function(response){
                     response = JSON.parse(response);
                     // console.log(response)
@@ -579,7 +579,7 @@
                     validationState = false;
                 }
             }
-            
+
             // Profile - SELECT
             if ($('#nav-select-tab').hasClass('active')) {
                 let someRadioChecked = false;
