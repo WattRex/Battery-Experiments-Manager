@@ -1,6 +1,9 @@
 INSERT INTO `CompatibleDevices` (`CompDevID`, `Name`, `Manufacturer`, `Model`, `DeviceType`, `MinSWVersion`, `VoltMin`, `VoltMax`, `CurrMin`, `CurrMax`) VALUES
     (2, 'EPC', 'Wattrex', 'A', 'Epc', 0, 0, 6000, -15000, 15000),
-    (3, 'BMS', 'Liftec', '0', 'Bms', 0, NULL, NULL, NULL, NULL);
+    (3, 'BMS', 'Liftec', '0', 'Bms', 0, NULL, NULL, NULL, NULL),
+    (4, 'SOURCE', 'EA', 'PS_2042-20B', 'Source', 0, 0, 42000, 0, 20000),
+    (5, 'LOAD', 'RS', 'KEL-103', 'Load', 0, 0, 120000, 0, 30000);
+
 
 INSERT INTO `AvailableMeasures` (`MeasType`, `CompDevID`, `MeasName`) VALUES
     (1, 2, 'hs_voltage'),
@@ -25,4 +28,10 @@ INSERT INTO `AvailableMeasures` (`MeasType`, `CompDevID`, `MeasName`) VALUES
     (20, 3, 'vstack'),
     (21, 3, 'status'),
     (22, 3, 'pres1'),
-    (23, 3, 'pres2');
+    (23, 3, 'pres2'),
+    (24, 4, 'voltage'),
+    (25, 4, 'current'),
+    (26, 4, 'power'),
+    (27, 5, 'voltage'),
+    (28, 5, 'current'),
+    (29, 5, 'power');
